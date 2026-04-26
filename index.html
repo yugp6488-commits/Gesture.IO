@@ -1,1272 +1,2284 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gesture.IO</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gesture.IO</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap');
 
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-html{scroll-behavior:smooth;overflow-x:hidden;}
-body{
-  background:#000;color:#fff;
-  font-family:'Space Grotesk',sans-serif;
-  cursor:none;overflow-x:hidden;
-}
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-#bg-wave   { position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none; }
-#bg-paths  { position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none; }
-#problem-bg{ position:fixed;top:0;left:0;width:100%;height:100%;z-index:2;pointer-events:none;background:transparent; }
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
 
-#cursor-trail{ position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9990; }
-#cursor-dot{
-  position:fixed;width:7px;height:7px;
-  background:rgba(255,255,255,0.9);border-radius:50%;
-  pointer-events:none;z-index:9995;
-  transform:translate(-50%,-50%);
-  transition:width .18s ease,height .18s ease,background .2s ease,box-shadow .2s ease;
-}
-#cursor-ring{
-  position:fixed;width:28px;height:28px;
-  border:1px solid rgba(255,255,255,0.25);border-radius:50%;
-  pointer-events:none;z-index:9994;
-  transform:translate(-50%,-50%);
-  transition:width .22s ease,height .22s ease,border-color .22s ease;
-}
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      cursor: none;
+      overflow-x: hidden;
+    }
 
-body.hover-text  #cursor-dot { width:44px;height:44px;background:rgba(255,255,255,0.08);box-shadow:0 0 0 1px rgba(255,255,255,0.4); }
-body.hover-text  #cursor-ring{ width:62px;height:62px;border-color:rgba(255,255,255,0.18); }
-body.hover-btn   #cursor-dot { width:36px;height:36px;background:rgba(255,51,102,0.7);box-shadow:0 0 20px rgba(255,51,102,0.4); }
-body.hover-btn   #cursor-ring{ width:54px;height:54px;border-color:rgba(255,51,102,0.5); }
-body.hover-card  #cursor-dot { width:16px;height:16px;background:rgba(255,107,53,0.8);box-shadow:0 0 12px rgba(255,107,53,0.5); }
-body.hover-card  #cursor-ring{ width:40px;height:40px;border-color:rgba(255,107,53,0.4); }
+    #bg-wave {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
 
-/* LEFT NAV */
-#side-nav{
-  position:fixed;left:0;top:50%;
-  transform:translateY(-50%) translateX(-100%);
-  z-index:8500;
-  display:flex;align-items:stretch;
-  transition:transform .48s cubic-bezier(.22,1,.36,1);
-}
-#side-nav.open{ transform:translateY(-50%) translateX(0); }
-#nav-panel{
-  background:rgba(8,8,8,0.94);
-  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  border:1px solid rgba(255,255,255,0.08);
-  border-left:none;
-  border-radius:0 18px 18px 0;
-  padding:2rem 1.6rem 1.6rem 1.8rem;
-  width:220px;
-  display:flex;flex-direction:column;gap:.25rem;
-  box-shadow:8px 0 48px rgba(0,0,0,0.7);
-}
-#nav-tab{
-  width:22px;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:5px;
-  background:rgba(255,255,255,0.05);
-  border:1px solid rgba(255,255,255,0.07);
-  border-left:none;
-  border-radius:0 10px 10px 0;
-  cursor:none;padding:.9rem 0;
-  transition:background .25s;
-  flex-shrink:0;
-}
-#nav-tab:hover{ background:rgba(255,51,102,0.18); }
-.nav-tab-dot{ width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,0.35); }
-.nav-hdr{
-  font-size:9px;letter-spacing:.45em;text-transform:uppercase;
-  color:rgba(255,255,255,0.18);margin-bottom:1.1rem;
-  padding-bottom:.75rem;border-bottom:1px solid rgba(255,255,255,0.06);
-}
-.nav-item{
-  display:flex;align-items:center;gap:.7rem;
-  padding:.65rem .75rem;border-radius:10px;
-  cursor:none;text-decoration:none;
-  transition:background .2s,border-color .2s;
-  border:1px solid transparent;position:relative;overflow:hidden;
-}
-.nav-item::before{
-  content:'';position:absolute;left:0;top:0;
-  width:2px;height:100%;
-  background:linear-gradient(to bottom,#FF3366,#FF6B35);
-  transform:scaleY(0);transform-origin:bottom;
-  transition:transform .25s ease;border-radius:2px;
-}
-.nav-item:hover{ background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.07); }
-.nav-item:hover::before,.nav-item.active::before{ transform:scaleY(1); }
-.nav-item.active{ background:rgba(255,51,102,0.07);border-color:rgba(255,51,102,0.18); }
-.nav-ico{
-  width:30px;height:30px;border-radius:8px;flex-shrink:0;
-  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);
-  display:flex;align-items:center;justify-content:center;font-size:13px;
-  transition:background .2s,border-color .2s;
-}
-.nav-item:hover .nav-ico,.nav-item.active .nav-ico{
-  background:rgba(255,51,102,0.12);border-color:rgba(255,51,102,0.28);
-}
-.nav-txt{ display:flex;flex-direction:column;gap:2px; }
-.nav-lbl{
-  font-family:'Syne',sans-serif;font-size:12px;font-weight:700;
-  color:rgba(255,255,255,0.6);line-height:1;transition:color .2s;
-}
-.nav-item:hover .nav-lbl,.nav-item.active .nav-lbl{ color:#fff; }
-.nav-sub{ font-size:9.5px;color:rgba(255,255,255,0.22);letter-spacing:.03em;line-height:1; }
-.nav-prog-row{
-  margin-top:auto;padding-top:1.2rem;
-  border-top:1px solid rgba(255,255,255,0.06);
-  display:flex;gap:4px;align-items:center;padding-left:2px;
-}
-.npd{ height:3px;border-radius:2px;background:rgba(255,255,255,0.12);transition:width .3s,background .3s;width:8px; }
-.npd.active{ background:#FF3366;width:22px; }
+    #bg-paths {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
 
-/* LOADER */
-#loader{
-  position:fixed;top:0;left:0;width:100%;height:100%;
-  background:#000;z-index:8000;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-}
-#loader-content{ position:relative;z-index:10;text-align:center;padding:0 2rem; }
-#l-logo{
-  font-family:'Syne',sans-serif;
-  font-size:clamp(60px,12vw,130px);font-weight:800;
-  letter-spacing:-0.04em;color:#fff;
-  opacity:0;transform:translateY(70px);
-  display:block;line-height:0.92;margin-bottom:1.2rem;
-}
-#l-tagline{
-  font-size:11px;letter-spacing:0.45em;text-transform:uppercase;
-  color:rgba(255,255,255,0.3);opacity:0;transform:translateY(16px);
-  margin-bottom:3.5rem;
-}
-#l-attention{
-  font-family:'Syne',sans-serif;
-  font-size:clamp(16px,2.8vw,26px);font-weight:400;line-height:1.55;
-  color:rgba(255,255,255,0);max-width:560px;margin:0 auto 2rem;opacity:0;
-}
-#l-attention .hl{ color:#FF3366; }
-#l-prog-wrap{ opacity:0;margin-bottom:.6rem; }
-#l-progress{ width:160px;height:1px;background:rgba(255,255,255,0.1);position:relative;overflow:hidden;margin:0 auto .6rem; }
-#l-progress-fill{ height:100%;width:0;background:#fff;position:absolute;top:0;left:0; }
-#l-progress-label{ font-size:10px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.18); }
-#l-enter{
-  display:inline-flex;align-items:center;gap:.6rem;
-  padding:.75rem 2.6rem;margin-top:1.6rem;
-  border:1px solid rgba(255,51,102,0.45);border-radius:100px;
-  background:rgba(255,51,102,0.07);
-  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
-  letter-spacing:0.22em;text-transform:uppercase;color:#fff;
-  cursor:none;opacity:0;transform:scale(0.85);
-  transition:background .3s,border-color .3s,box-shadow .3s;
-}
-#l-enter:hover{ background:rgba(255,51,102,0.2);border-color:rgba(255,51,102,0.9);box-shadow:0 0 40px rgba(255,51,102,0.3); }
+    #problem-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;
+      background: transparent;
+    }
 
-/* MAIN SITE */
-#site{ position:relative;z-index:3;opacity:0;pointer-events:none; }
-#site.active{ opacity:1;pointer-events:all; }
+    #cursor-trail {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9990;
+    }
 
-section{
-  position:relative;z-index:2;min-height:100vh;
-  display:flex;flex-direction:column;
-  justify-content:center;align-items:center;padding:80px 5vw;
-}
+    #cursor-dot {
+      position: fixed;
+      width: 7px;
+      height: 7px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9995;
+      transform: translate(-50%, -50%);
+      transition: width .18s ease, height .18s ease, background .2s ease, box-shadow .2s ease;
+    }
 
-/* HERO */
-#hero{ min-height:100vh;overflow:hidden;text-align:center; }
-.hero-eyebrow{ font-size:clamp(11px,1.2vw,13px);letter-spacing:0.4em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:2rem; }
-.hero-title{
-  font-family:'Syne',sans-serif;font-size:clamp(72px,14vw,200px);font-weight:800;
-  line-height:0.9;letter-spacing:-0.04em;
-  background:linear-gradient(135deg,#fff 0%,rgba(255,255,255,0.6) 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  margin-bottom:2rem;
-}
-.hero-sub{ font-size:clamp(13px,1.5vw,16px);color:rgba(255,255,255,0.5);max-width:500px;line-height:1.7; }
-.hero-sub span{ color:rgba(255,255,255,0.85); }
-.scroll-hint{ position:absolute;bottom:3rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0.3;font-size:11px;letter-spacing:0.3em; }
-.scroll-line{ width:1px;height:60px;background:linear-gradient(to bottom,#fff,transparent);animation:scrollpulse 2s ease-in-out infinite; }
-@keyframes scrollpulse{0%,100%{opacity:.3;transform:scaleY(1);}50%{opacity:1;transform:scaleY(.7);}}
+    #cursor-ring {
+      position: fixed;
+      width: 28px;
+      height: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9994;
+      transform: translate(-50%, -50%);
+      transition: width .22s ease, height .22s ease, border-color .22s ease;
+    }
 
-/* PROBLEM */
-#problem{ background:transparent;text-align:center; }
-.problem-label{ font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:rgba(255,100,100,0.6);margin-bottom:3rem; }
-.problem-statement{ font-family:'Syne',sans-serif;font-size:clamp(24px,4.5vw,64px);font-weight:700;line-height:1.15;max-width:900px;color:#fff;margin-bottom:3rem; }
-.problem-statement em{ font-style:normal;color:#FF3366; }
-.problem-response{ font-size:clamp(14px,1.8vw,20px);color:rgba(255,255,255,0.55);font-weight:300;letter-spacing:.05em;max-width:600px; }
-.problem-response strong{ color:rgba(255,200,200,0.9); }
+    body.hover-text #cursor-dot {
+      width: 44px;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+    }
 
-/* TECH ARCHITECTURE */
-#tech{ text-align:center; }
-.section-label{ font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:4rem; }
-.tech-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;max-width:960px;width:100%;margin-bottom:5rem; }
-.tech-card{
-  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
-  border-radius:16px;padding:2rem 1.8rem;text-align:left;
-  position:relative;overflow:hidden;transition:border-color .3s,transform .3s,box-shadow .3s;
-}
-.tech-card::before{
-  content:'';position:absolute;top:0;left:-100%;width:200%;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);
-  animation:shimmer 3s linear infinite;
-}
-@keyframes shimmer{ to{ left:100%; } }
-.tech-card:hover{ border-color:rgba(255,51,102,0.45);transform:translateY(-5px);box-shadow:0 20px 60px rgba(255,51,102,0.08); }
-.tech-icon{ font-size:28px;margin-bottom:1.2rem;display:block; }
-.tech-title{ font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:.6rem;color:#fff; }
-.tech-desc{ font-size:13px;color:rgba(255,255,255,0.45);line-height:1.7; }
-.tech-tags{ display:flex;flex-wrap:wrap;gap:6px;margin-top:1.2rem; }
-.tech-tag{ font-size:11px;padding:4px 10px;border-radius:100px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6); }
-.flying-lines{ width:100%;max-width:960px;overflow:hidden;height:80px;position:relative;margin-top:2rem; }
-.fly-item{ position:absolute;white-space:nowrap;font-size:13px;color:rgba(255,255,255,0.2);top:50%;transform:translateY(-50%);animation:flyLeft 12s linear infinite; }
-.fly-item:nth-child(2){ animation-delay:-4s;color:rgba(255,51,102,0.25); }
-.fly-item:nth-child(3){ animation-delay:-8s;color:rgba(255,107,53,0.2); }
-@keyframes flyLeft{ from{left:100%;} to{left:-200%;} }
+    body.hover-text #cursor-ring {
+      width: 62px;
+      height: 62px;
+      border-color: rgba(255, 255, 255, 0.18);
+    }
 
-/* ════════════════════════════════════
+    body.hover-btn #cursor-dot {
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 51, 102, 0.7);
+      box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
+    }
+
+    body.hover-btn #cursor-ring {
+      width: 54px;
+      height: 54px;
+      border-color: rgba(255, 51, 102, 0.5);
+    }
+
+    body.hover-card #cursor-dot {
+      width: 16px;
+      height: 16px;
+      background: rgba(255, 107, 53, 0.8);
+      box-shadow: 0 0 12px rgba(255, 107, 53, 0.5);
+    }
+
+    body.hover-card #cursor-ring {
+      width: 40px;
+      height: 40px;
+      border-color: rgba(255, 107, 53, 0.4);
+    }
+
+    /* LEFT NAV */
+    #side-nav {
+      position: fixed;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%) translateX(-100%);
+      z-index: 8500;
+      display: flex;
+      align-items: stretch;
+      transition: transform .48s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    #side-nav.open {
+      transform: translateY(-50%) translateX(0);
+    }
+
+    #nav-panel {
+      background: rgba(8, 8, 8, 0.94);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-left: none;
+      border-radius: 0 18px 18px 0;
+      padding: 2rem 1.6rem 1.6rem 1.8rem;
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: .25rem;
+      box-shadow: 8px 0 48px rgba(0, 0, 0, 0.7);
+    }
+
+    #nav-tab {
+      width: 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-left: none;
+      border-radius: 0 10px 10px 0;
+      cursor: none;
+      padding: .9rem 0;
+      transition: background .25s;
+      flex-shrink: 0;
+    }
+
+    #nav-tab:hover {
+      background: rgba(255, 51, 102, 0.18);
+    }
+
+    .nav-tab-dot {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    .nav-hdr {
+      font-size: 9px;
+      letter-spacing: .45em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.18);
+      margin-bottom: 1.1rem;
+      padding-bottom: .75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      padding: .65rem .75rem;
+      border-radius: 10px;
+      cursor: none;
+      text-decoration: none;
+      transition: background .2s, border-color .2s;
+      border: 1px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(to bottom, #FF3366, #FF6B35);
+      transform: scaleY(0);
+      transform-origin: bottom;
+      transition: transform .25s ease;
+      border-radius: 2px;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.07);
+    }
+
+    .nav-item:hover::before,
+    .nav-item.active::before {
+      transform: scaleY(1);
+    }
+
+    .nav-item.active {
+      background: rgba(255, 51, 102, 0.07);
+      border-color: rgba(255, 51, 102, 0.18);
+    }
+
+    .nav-ico {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      transition: background .2s, border-color .2s;
+    }
+
+    .nav-item:hover .nav-ico,
+    .nav-item.active .nav-ico {
+      background: rgba(255, 51, 102, 0.12);
+      border-color: rgba(255, 51, 102, 0.28);
+    }
+
+    .nav-txt {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-lbl {
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1;
+      transition: color .2s;
+    }
+
+    .nav-item:hover .nav-lbl,
+    .nav-item.active .nav-lbl {
+      color: #fff;
+    }
+
+    .nav-sub {
+      font-size: 9.5px;
+      color: rgba(255, 255, 255, 0.22);
+      letter-spacing: .03em;
+      line-height: 1;
+    }
+
+    .nav-prog-row {
+      margin-top: auto;
+      padding-top: 1.2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding-left: 2px;
+    }
+
+    .npd {
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.12);
+      transition: width .3s, background .3s;
+      width: 8px;
+    }
+
+    .npd.active {
+      background: #FF3366;
+      width: 22px;
+    }
+
+    /* LOADER */
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      z-index: 8000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #loader-content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 0 2rem;
+    }
+
+    #l-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(60px, 12vw, 130px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: #fff;
+      opacity: 0;
+      transform: translateY(70px);
+      display: block;
+      line-height: 0.92;
+      margin-bottom: 1.2rem;
+    }
+
+    #l-tagline {
+      font-size: 11px;
+      letter-spacing: 0.45em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.3);
+      opacity: 0;
+      transform: translateY(16px);
+      margin-bottom: 3.5rem;
+    }
+
+    #l-attention {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(16px, 2.8vw, 26px);
+      font-weight: 400;
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0);
+      max-width: 560px;
+      margin: 0 auto 2rem;
+      opacity: 0;
+    }
+
+    #l-attention .hl {
+      color: #FF3366;
+    }
+
+    #l-prog-wrap {
+      opacity: 0;
+      margin-bottom: .6rem;
+    }
+
+    #l-progress {
+      width: 160px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+      margin: 0 auto .6rem;
+    }
+
+    #l-progress-fill {
+      height: 100%;
+      width: 0;
+      background: #fff;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    #l-progress-label {
+      font-size: 10px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.18);
+    }
+
+    #l-enter {
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .75rem 2.6rem;
+      margin-top: 1.6rem;
+      border: 1px solid rgba(255, 51, 102, 0.45);
+      border-radius: 100px;
+      background: rgba(255, 51, 102, 0.07);
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #fff;
+      cursor: none;
+      opacity: 0;
+      transform: scale(0.85);
+      transition: background .3s, border-color .3s, box-shadow .3s;
+    }
+
+    #l-enter:hover {
+      background: rgba(255, 51, 102, 0.2);
+      border-color: rgba(255, 51, 102, 0.9);
+      box-shadow: 0 0 40px rgba(255, 51, 102, 0.3);
+    }
+
+    /* MAIN SITE */
+    #site {
+      position: relative;
+      z-index: 3;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #site.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    section {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 80px 5vw;
+    }
+
+    /* HERO */
+    #hero {
+      min-height: 100vh;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      font-size: clamp(11px, 1.2vw, 13px);
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 2rem;
+    }
+
+    .hero-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(72px, 14vw, 200px);
+      font-weight: 800;
+      line-height: 0.9;
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.6) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 2rem;
+    }
+
+    .hero-sub {
+      font-size: clamp(13px, 1.5vw, 16px);
+      color: rgba(255, 255, 255, 0.5);
+      max-width: 500px;
+      line-height: 1.7;
+    }
+
+    .hero-sub span {
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 3rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      opacity: 0.3;
+      font-size: 11px;
+      letter-spacing: 0.3em;
+    }
+
+    .scroll-line {
+      width: 1px;
+      height: 60px;
+      background: linear-gradient(to bottom, #fff, transparent);
+      animation: scrollpulse 2s ease-in-out infinite;
+    }
+
+    @keyframes scrollpulse {
+
+      0%,
+      100% {
+        opacity: .3;
+        transform: scaleY(1);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scaleY(.7);
+      }
+    }
+
+    /* PROBLEM */
+    #problem {
+      background: transparent;
+      text-align: center;
+    }
+
+    .problem-label {
+      font-size: 11px;
+      letter-spacing: .5em;
+      text-transform: uppercase;
+      color: rgba(255, 100, 100, 0.6);
+      margin-bottom: 3rem;
+    }
+
+    .problem-statement {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(24px, 4.5vw, 64px);
+      font-weight: 700;
+      line-height: 1.15;
+      max-width: 900px;
+      color: #fff;
+      margin-bottom: 3rem;
+    }
+
+    .problem-statement em {
+      font-style: normal;
+      color: #FF3366;
+    }
+
+    .problem-response {
+      font-size: clamp(14px, 1.8vw, 20px);
+      color: rgba(255, 255, 255, 0.55);
+      font-weight: 300;
+      letter-spacing: .05em;
+      max-width: 600px;
+    }
+
+    .problem-response strong {
+      color: rgba(255, 200, 200, 0.9);
+    }
+
+    /* TECH ARCHITECTURE */
+    #tech {
+      text-align: center;
+    }
+
+    .section-label {
+      font-size: 11px;
+      letter-spacing: .5em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.3);
+      margin-bottom: 4rem;
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      max-width: 960px;
+      width: 100%;
+      margin-bottom: 5rem;
+    }
+
+    .tech-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 2rem 1.8rem;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .3s, transform .3s, box-shadow .3s;
+    }
+
+    .tech-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 200%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: shimmer 3s linear infinite;
+    }
+
+    @keyframes shimmer {
+      to {
+        left: 100%;
+      }
+    }
+
+    .tech-card:hover {
+      border-color: rgba(255, 51, 102, 0.45);
+      transform: translateY(-5px);
+      box-shadow: 0 20px 60px rgba(255, 51, 102, 0.08);
+    }
+
+    .tech-icon {
+      font-size: 28px;
+      margin-bottom: 1.2rem;
+      display: block;
+    }
+
+    .tech-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: .6rem;
+      color: #fff;
+    }
+
+    .tech-desc {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.45);
+      line-height: 1.7;
+    }
+
+    .tech-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 1.2rem;
+    }
+
+    .tech-tag {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .flying-lines {
+      width: 100%;
+      max-width: 960px;
+      overflow: hidden;
+      height: 80px;
+      position: relative;
+      margin-top: 2rem;
+    }
+
+    .fly-item {
+      position: absolute;
+      white-space: nowrap;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.2);
+      top: 50%;
+      transform: translateY(-50%);
+      animation: flyLeft 12s linear infinite;
+    }
+
+    .fly-item:nth-child(2) {
+      animation-delay: -4s;
+      color: rgba(255, 51, 102, 0.25);
+    }
+
+    .fly-item:nth-child(3) {
+      animation-delay: -8s;
+      color: rgba(255, 107, 53, 0.2);
+    }
+
+    @keyframes flyLeft {
+      from {
+        left: 100%;
+      }
+
+      to {
+        left: -200%;
+      }
+    }
+
+    /* ════════════════════════════════════
    FULL TECH STACK SECTION  ← NEW
 ════════════════════════════════════ */
-#stack{
-  text-align:center;
-  min-height:auto;padding:100px 5vw;
-}
-.stack-subtitle{
-  font-size:13px;color:rgba(255,255,255,0.35);max-width:560px;
-  margin:0 auto 5rem;line-height:1.8;
-}
+    #stack {
+      text-align: center;
+      min-height: auto;
+      padding: 100px 5vw;
+    }
 
-/* Category tabs */
-.stack-tabs{
-  display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem;
-  margin-bottom:3rem;
-}
-.stack-tab{
-  font-size:11px;letter-spacing:.2em;text-transform:uppercase;
-  padding:.5rem 1.2rem;border-radius:100px;cursor:none;
-  border:1px solid rgba(255,255,255,0.1);
-  background:rgba(255,255,255,0.04);
-  color:rgba(255,255,255,0.4);
-  transition:all .25s;
-}
-.stack-tab:hover,.stack-tab.active{
-  background:rgba(255,51,102,0.12);
-  border-color:rgba(255,51,102,0.45);
-  color:#fff;
-}
+    .stack-subtitle {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.35);
+      max-width: 560px;
+      margin: 0 auto 5rem;
+      line-height: 1.8;
+    }
 
-/* Stack grid */
-.stack-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
-  gap:1rem;max-width:1100px;width:100%;margin:0 auto 4rem;
-}
-.stack-item{
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.07);
-  border-radius:14px;padding:1.4rem 1.2rem;
-  text-align:left;position:relative;overflow:hidden;
-  transition:all .3s;cursor:default;
-}
-.stack-item:hover{
-  border-color:rgba(255,51,102,0.3);
-  background:rgba(255,51,102,0.04);
-  transform:translateY(-3px);
-}
-.stack-item-top{
-  display:flex;align-items:center;gap:.7rem;margin-bottom:.8rem;
-}
-.stack-logo{
-  width:36px;height:36px;border-radius:9px;
-  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);
-  display:flex;align-items:center;justify-content:center;
-  font-size:16px;flex-shrink:0;
-}
-.stack-name{
-  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;
-}
-.stack-version{
-  font-size:10px;color:rgba(255,51,102,0.7);
-  background:rgba(255,51,102,0.08);border:1px solid rgba(255,51,102,0.15);
-  padding:2px 7px;border-radius:100px;margin-left:auto;white-space:nowrap;
-}
-.stack-use{
-  font-size:11.5px;color:rgba(255,255,255,0.38);line-height:1.6;
-}
-.stack-category-badge{
-  position:absolute;top:.75rem;right:.75rem;
-  font-size:9px;letter-spacing:.2em;text-transform:uppercase;
-  color:rgba(255,255,255,0.2);
-}
+    /* Category tabs */
+    .stack-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: .5rem;
+      margin-bottom: 3rem;
+    }
 
-/* Layer legend */
-.stack-legend{
-  display:flex;flex-wrap:wrap;justify-content:center;gap:1.2rem;
-  max-width:800px;margin:0 auto;padding-top:2rem;
-  border-top:1px solid rgba(255,255,255,0.06);
-}
-.legend-item{
-  display:flex;align-items:center;gap:.5rem;
-  font-size:11px;color:rgba(255,255,255,0.35);
-}
-.legend-dot{
-  width:8px;height:8px;border-radius:50%;flex-shrink:0;
-}
+    .stack-tab {
+      font-size: 11px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      padding: .5rem 1.2rem;
+      border-radius: 100px;
+      cursor: none;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.4);
+      transition: all .25s;
+    }
 
-/* INSTALL */
-#install{ text-align:center; }
-.steps-row{ display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;max-width:960px;width:100%;margin-top:3rem; }
-.step-card{
-  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
-  border-radius:12px;padding:1.8rem 1.5rem;
-  flex:1;min-width:200px;max-width:260px;
-  transition:all .3s;
-}
-.step-card:hover{ background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.18);transform:translateY(-3px); }
-.step-num{ font-family:'Syne',sans-serif;font-size:48px;font-weight:800;color:rgba(255,255,255,0.05);line-height:1;margin-bottom:.5rem; }
-.step-title{ font-size:14px;font-weight:600;margin-bottom:.5rem;color:#fff; }
-.step-code{ font-family:monospace;font-size:12px;color:rgba(255,51,102,0.8);background:rgba(255,51,102,0.07);padding:6px 10px;border-radius:6px;margin-top:.5rem;display:block;border:1px solid rgba(255,51,102,0.15); }
-.step-note{ font-size:11px;color:rgba(255,255,255,0.3);margin-top:.8rem;line-height:1.6; }
-.window-badge{ font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,107,53,0.7);margin-top:3rem;padding:.5rem 1.2rem;border:1px solid rgba(255,107,53,0.2);border-radius:100px;display:inline-block; }
+    .stack-tab:hover,
+    .stack-tab.active {
+      background: rgba(255, 51, 102, 0.12);
+      border-color: rgba(255, 51, 102, 0.45);
+      color: #fff;
+    }
 
-/* DOWNLOAD */
-#download{ text-align:center;min-height:80vh; }
-.dl-big{ font-family:'Syne',sans-serif;font-size:clamp(14px,2vw,18px);text-transform:uppercase;letter-spacing:.3em;color:rgba(255,255,255,0.3);margin-bottom:2rem; }
-.dl-btn{
-  display:inline-flex;align-items:center;gap:1rem;
-  padding:1.4rem 4rem;
-  background:linear-gradient(135deg,#FF3366,#FF6B35);
-  border:none;border-radius:100px;
-  font-family:'Syne',sans-serif;font-size:clamp(16px,2.5vw,22px);font-weight:700;
-  color:#fff;cursor:none;transition:transform .3s,box-shadow .3s;
-  box-shadow:0 0 60px rgba(255,51,102,0.3);
-}
-.dl-btn:hover{ transform:scale(1.06);box-shadow:0 0 100px rgba(255,51,102,0.65); }
-.dl-btn:active{ transform:scale(0.97); }
-.dl-meta{
-  display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;
-  margin-top:2rem;
-}
-.dl-meta-item{
-  display:flex;align-items:center;gap:.4rem;
-  font-size:12px;color:rgba(255,255,255,0.3);
-  padding:.4rem .9rem;border:1px solid rgba(255,255,255,0.07);
-  border-radius:100px;background:rgba(255,255,255,0.03);
-}
-.dl-sub{ margin-top:1.5rem;font-size:12px;color:rgba(255,255,255,0.25);letter-spacing:.1em; }
-.dl-sub a{ color:rgba(255,255,255,0.4);text-decoration:none; }
-.dl-sub a:hover{ color:rgba(255,255,255,0.75); }
+    /* Stack grid */
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto 4rem;
+    }
 
-/* TEAM */
-#team{ text-align:center;padding:100px 5vw; }
-.team-intro{ font-size:clamp(13px,1.6vw,15px);color:rgba(255,255,255,0.35);max-width:560px;line-height:1.8;margin:0 auto 4rem;letter-spacing:0.02em; }
-.team-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;max-width:960px;width:100%;margin:0 auto; }
-.member-card{
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.07);
-  border-radius:20px;padding:2.2rem 2rem;
-  text-align:left;position:relative;overflow:hidden;
-  transition:border-color .35s,transform .35s,box-shadow .35s;
-}
-.member-card::after{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(circle at 70% 0%, rgba(255,51,102,0.06) 0%, transparent 60%);
-  opacity:0;transition:opacity .4s;
-}
-.member-card:hover{ border-color:rgba(255,51,102,0.35);transform:translateY(-6px);box-shadow:0 24px 60px rgba(0,0,0,0.5); }
-.member-card:hover::after{ opacity:1; }
-.member-avatar{
-  width:52px;height:52px;border-radius:50%;
-  background:linear-gradient(135deg,#FF3366,#FF6B35);
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Syne',sans-serif;font-size:18px;font-weight:800;
-  color:#fff;margin-bottom:1.4rem;letter-spacing:-0.02em;flex-shrink:0;
-}
-.member-name{ font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:#fff;margin-bottom:.25rem; }
-.member-role{ font-size:12px;color:rgba(255,51,102,0.8);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem; }
-.member-bio{ font-size:12.5px;color:rgba(255,255,255,0.38);line-height:1.75;margin-bottom:1.4rem; }
-.member-links{ display:flex;gap:.6rem;flex-wrap:wrap; }
-.m-link{
-  display:inline-flex;align-items:center;gap:.4rem;
-  font-size:11px;letter-spacing:.08em;
-  padding:5px 12px;border-radius:100px;
-  border:1px solid rgba(255,255,255,0.1);
-  color:rgba(255,255,255,0.5);text-decoration:none;
-  transition:color .25s,border-color .25s,background .25s;
-}
-.m-link:hover{ color:#fff;border-color:rgba(255,51,102,0.5);background:rgba(255,51,102,0.08); }
-.m-link svg{ flex-shrink:0; }
-/* Ensure all interactive elements are always clickable */
-a, button, .dl-btn, .stack-tab, .m-link, #l-enter, #nav-tab {
-  pointer-events:all !important;
-  cursor:none;
-}
+    .stack-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 14px;
+      padding: 1.4rem 1.2rem;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+      transition: all .3s;
+      cursor: default;
+    }
 
-/* FOOTER */
-#site-footer{ position:relative;z-index:3;border-top:1px solid rgba(255,255,255,0.06);padding:0 5vw; }
-.footer-top{ display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr;gap:3rem;padding:5rem 0 4rem;max-width:1100px;margin:0 auto; }
-@media(max-width:800px){ .footer-top{ grid-template-columns:1fr 1fr; } .footer-brand{ grid-column:1/-1; } }
-@media(max-width:520px){ .footer-top{ grid-template-columns:1fr; } }
-.footer-brand-logo{ font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-0.03em;color:#fff;margin-bottom:.8rem;display:block; }
-.footer-brand-tagline{ font-size:12px;color:rgba(255,255,255,0.3);line-height:1.7;max-width:280px;margin-bottom:1.6rem; }
-.footer-badges{ display:flex;gap:.5rem;flex-wrap:wrap; }
-.f-badge{ font-size:10px;padding:4px 10px;border-radius:100px;letter-spacing:.1em;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);color:rgba(255,255,255,0.4); }
-.footer-col-title{ font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:1.4rem; }
-.footer-links{ list-style:none;display:flex;flex-direction:column;gap:.7rem; }
-.footer-links a{ font-size:13px;color:rgba(255,255,255,0.32);text-decoration:none;transition:color .2s;display:inline-flex;align-items:center;gap:.4rem; }
-.footer-links a:hover{ color:#fff; }
-.footer-links a .dot{ width:4px;height:4px;border-radius:50%;background:rgba(255,51,102,0.5);flex-shrink:0;opacity:0;transition:opacity .2s; }
-.footer-links a:hover .dot{ opacity:1; }
-.footer-contact-item{ display:flex;align-items:flex-start;gap:.7rem;margin-bottom:1rem; }
-.footer-contact-item svg{ flex-shrink:0;margin-top:2px;opacity:.4; }
-.footer-contact-item span{ font-size:12.5px;color:rgba(255,255,255,0.32);line-height:1.5; }
-.footer-contact-item a{ color:rgba(255,255,255,0.32);text-decoration:none;transition:color .2s; }
-.footer-contact-item a:hover{ color:#fff; }
-.footer-bottom{ border-top:1px solid rgba(255,255,255,0.05);padding:1.8rem 0;max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem; }
-.footer-copy{ font-size:11px;color:rgba(255,255,255,0.18);letter-spacing:.15em; }
-.footer-social{ display:flex;gap:.7rem; }
-.f-social{ width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.35);text-decoration:none;transition:border-color .25s,color .25s,background .25s; }
-.f-social:hover{ border-color:rgba(255,51,102,0.5);color:#fff;background:rgba(255,51,102,0.1); }
+    .stack-item:hover {
+      border-color: rgba(255, 51, 102, 0.3);
+      background: rgba(255, 51, 102, 0.04);
+      transform: translateY(-3px);
+    }
 
-.gsap-reveal{ opacity:0;transform:translateY(40px); }
-</style>
+    .stack-item-top {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      margin-bottom: .8rem;
+    }
+
+    .stack-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .stack-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .stack-version {
+      font-size: 10px;
+      color: rgba(255, 51, 102, 0.7);
+      background: rgba(255, 51, 102, 0.08);
+      border: 1px solid rgba(255, 51, 102, 0.15);
+      padding: 2px 7px;
+      border-radius: 100px;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    .stack-use {
+      font-size: 11.5px;
+      color: rgba(255, 255, 255, 0.38);
+      line-height: 1.6;
+    }
+
+    .stack-category-badge {
+      position: absolute;
+      top: .75rem;
+      right: .75rem;
+      font-size: 9px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Layer legend */
+    .stack-legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.2rem;
+      max-width: 800px;
+      margin: 0 auto;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* INSTALL */
+    #install {
+      text-align: center;
+    }
+
+    .steps-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      max-width: 960px;
+      width: 100%;
+      margin-top: 3rem;
+    }
+
+    .step-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 12px;
+      padding: 1.8rem 1.5rem;
+      flex: 1;
+      min-width: 200px;
+      max-width: 260px;
+      transition: all .3s;
+    }
+
+    .step-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-3px);
+    }
+
+    .step-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.05);
+      line-height: 1;
+      margin-bottom: .5rem;
+    }
+
+    .step-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: .5rem;
+      color: #fff;
+    }
+
+    .step-code {
+      font-family: monospace;
+      font-size: 12px;
+      color: rgba(255, 51, 102, 0.8);
+      background: rgba(255, 51, 102, 0.07);
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-top: .5rem;
+      display: block;
+      border: 1px solid rgba(255, 51, 102, 0.15);
+    }
+
+    .step-note {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.3);
+      margin-top: .8rem;
+      line-height: 1.6;
+    }
+
+    .window-badge {
+      font-size: 11px;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: rgba(255, 107, 53, 0.7);
+      margin-top: 3rem;
+      padding: .5rem 1.2rem;
+      border: 1px solid rgba(255, 107, 53, 0.2);
+      border-radius: 100px;
+      display: inline-block;
+    }
+
+    /* DOWNLOAD */
+    #download {
+      text-align: center;
+      min-height: 80vh;
+    }
+
+    .dl-big {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(14px, 2vw, 18px);
+      text-transform: uppercase;
+      letter-spacing: .3em;
+      color: rgba(255, 255, 255, 0.3);
+      margin-bottom: 2rem;
+    }
+
+    .dl-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.4rem 4rem;
+      background: linear-gradient(135deg, #FF3366, #FF6B35);
+      border: none;
+      border-radius: 100px;
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(16px, 2.5vw, 22px);
+      font-weight: 700;
+      color: #fff;
+      cursor: none;
+      transition: transform .3s, box-shadow .3s;
+      box-shadow: 0 0 60px rgba(255, 51, 102, 0.3);
+    }
+
+    .dl-btn:hover {
+      transform: scale(1.06);
+      box-shadow: 0 0 100px rgba(255, 51, 102, 0.65);
+    }
+
+    .dl-btn:active {
+      transform: scale(0.97);
+    }
+
+    .dl-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .dl-meta-item {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.3);
+      padding: .4rem .9rem;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .dl-sub {
+      margin-top: 1.5rem;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.25);
+      letter-spacing: .1em;
+    }
+
+    .dl-sub a {
+      color: rgba(255, 255, 255, 0.4);
+      text-decoration: none;
+    }
+
+    .dl-sub a:hover {
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    /* TEAM */
+    #team {
+      text-align: center;
+      padding: 100px 5vw;
+    }
+
+    .team-intro {
+      font-size: clamp(13px, 1.6vw, 15px);
+      color: rgba(255, 255, 255, 0.35);
+      max-width: 560px;
+      line-height: 1.8;
+      margin: 0 auto 4rem;
+      letter-spacing: 0.02em;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .member-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 20px;
+      padding: 2.2rem 2rem;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .35s, transform .35s, box-shadow .35s;
+    }
+
+    .member-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 70% 0%, rgba(255, 51, 102, 0.06) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity .4s;
+      pointer-events: none;
+    }
+
+    .member-card:hover {
+      border-color: rgba(255, 51, 102, 0.35);
+      transform: translateY(-6px);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .member-card:hover::after {
+      opacity: 1;
+    }
+
+    .member-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FF3366, #FF6B35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 1.4rem;
+      letter-spacing: -0.02em;
+      flex-shrink: 0;
+    }
+
+    .member-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: .25rem;
+    }
+
+    .member-role {
+      font-size: 12px;
+      color: rgba(255, 51, 102, 0.8);
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .member-bio {
+      font-size: 12.5px;
+      color: rgba(255, 255, 255, 0.38);
+      line-height: 1.75;
+      margin-bottom: 1.4rem;
+    }
+
+    .member-links {
+      display: flex;
+      gap: .6rem;
+      flex-wrap: wrap;
+    }
+
+    .m-link {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: 11px;
+      letter-spacing: .08em;
+      padding: 5px 12px;
+      border-radius: 100px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.5);
+      text-decoration: none;
+      transition: color .25s, border-color .25s, background .25s;
+    }
+
+    .m-link:hover {
+      color: #fff;
+      border-color: rgba(255, 51, 102, 0.5);
+      background: rgba(255, 51, 102, 0.08);
+    }
+
+    .m-link svg {
+      flex-shrink: 0;
+    }
+
+    /* Ensure all interactive elements are always clickable */
+    a,
+    button,
+    .dl-btn,
+    .stack-tab,
+    .m-link,
+    #l-enter,
+    #nav-tab {
+      pointer-events: all !important;
+      cursor: none;
+    }
+
+    /* FOOTER */
+    #site-footer {
+      position: relative;
+      z-index: 3;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 0 5vw;
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 1.8fr 1fr 1fr 1fr;
+      gap: 3rem;
+      padding: 5rem 0 4rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    @media(max-width:800px) {
+      .footer-top {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .footer-brand {
+        grid-column: 1/-1;
+      }
+    }
+
+    @media(max-width:520px) {
+      .footer-top {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .footer-brand-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #fff;
+      margin-bottom: .8rem;
+      display: block;
+    }
+
+    .footer-brand-tagline {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.3);
+      line-height: 1.7;
+      max-width: 280px;
+      margin-bottom: 1.6rem;
+    }
+
+    .footer-badges {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+
+    .f-badge {
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      letter-spacing: .1em;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .footer-col-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 1.4rem;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: .7rem;
+    }
+
+    .footer-links a {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.32);
+      text-decoration: none;
+      transition: color .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+    }
+
+    .footer-links a:hover {
+      color: #fff;
+    }
+
+    .footer-links a .dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(255, 51, 102, 0.5);
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    .footer-links a:hover .dot {
+      opacity: 1;
+    }
+
+    .footer-contact-item {
+      display: flex;
+      align-items: flex-start;
+      gap: .7rem;
+      margin-bottom: 1rem;
+    }
+
+    .footer-contact-item svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+      opacity: .4;
+    }
+
+    .footer-contact-item span {
+      font-size: 12.5px;
+      color: rgba(255, 255, 255, 0.32);
+      line-height: 1.5;
+    }
+
+    .footer-contact-item a {
+      color: rgba(255, 255, 255, 0.32);
+      text-decoration: none;
+      transition: color .2s;
+    }
+
+    .footer-contact-item a:hover {
+      color: #fff;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 1.8rem 0;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-copy {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.18);
+      letter-spacing: .15em;
+    }
+
+    .footer-social {
+      display: flex;
+      gap: .7rem;
+    }
+
+    .f-social {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.35);
+      text-decoration: none;
+      transition: border-color .25s, color .25s, background .25s;
+    }
+
+    .f-social:hover {
+      border-color: rgba(255, 51, 102, 0.5);
+      color: #fff;
+      background: rgba(255, 51, 102, 0.1);
+    }
+
+    .gsap-reveal {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- BACKGROUND LAYERS -->
-<canvas id="bg-wave"></canvas>
-<svg id="bg-paths" viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice" fill="none" xmlns="http://www.w3.org/2000/svg"></svg>
-<div id="problem-bg"></div>
+  <!-- BACKGROUND LAYERS -->
+  <canvas id="bg-wave"></canvas>
+  <svg id="bg-paths" viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice" fill="none"
+    xmlns="http://www.w3.org/2000/svg"></svg>
+  <div id="problem-bg"></div>
 
-<!-- CURSOR -->
-<canvas id="cursor-trail"></canvas>
-<div id="cursor-dot"></div>
-<div id="cursor-ring"></div>
+  <!-- CURSOR -->
+  <canvas id="cursor-trail"></canvas>
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
 
-<!-- LOADER -->
-<div id="loader">
-  <div id="loader-content">
-    <span id="l-logo">GESTURE.IO</span>
-    <div id="l-tagline">Computer Control by Human Gesture &nbsp;·&nbsp; Deep Learning · KU</div>
-    <div id="l-attention">
-      <span class="hl">Attention</span> — your screen will be<br/>
-      treated by gesture <span class="hl">very soon</span>.<br/>
-      No mouse. No keyboard. Just <span class="hl">you</span>.
-    </div>
-    <div id="l-prog-wrap">
-      <div id="l-progress"><div id="l-progress-fill"></div></div>
-      <div id="l-progress-label">Initialising gesture engine</div>
-    </div>
-    <button id="l-enter">
-      Enter Experience
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-    </button>
-  </div>
-</div>
-
-<!-- SITE -->
-<div id="site">
-
-  <!-- LEFT NAV -->
-  <div id="side-nav">
-    <div id="nav-panel">
-      <div class="nav-hdr">Navigation</div>
-      <a class="nav-item active" href="#hero">
-        <div class="nav-ico">🏠</div>
-        <div class="nav-txt"><span class="nav-lbl">Home</span><span class="nav-sub">Overview</span></div>
-      </a>
-      <a class="nav-item" href="#problem">
-        <div class="nav-ico">❗</div>
-        <div class="nav-txt"><span class="nav-lbl">Problem</span><span class="nav-sub">Why we built it</span></div>
-      </a>
-      <a class="nav-item" href="#tech">
-        <div class="nav-ico">🧠</div>
-        <div class="nav-txt"><span class="nav-lbl">Architecture</span><span class="nav-sub">ML pipeline</span></div>
-      </a>
-      <a class="nav-item" href="#stack">
-        <div class="nav-ico">⚙️</div>
-        <div class="nav-txt"><span class="nav-lbl">Tech Stack</span><span class="nav-sub">All tools used</span></div>
-      </a>
-      <a class="nav-item" href="#install">
-        <div class="nav-ico">📦</div>
-        <div class="nav-txt"><span class="nav-lbl">Install</span><span class="nav-sub">Setup guide</span></div>
-      </a>
-      <a class="nav-item" href="#download">
-        <div class="nav-ico">⬇️</div>
-        <div class="nav-txt"><span class="nav-lbl">Download</span><span class="nav-sub">Get it now</span></div>
-      </a>
-      <a class="nav-item" href="#team">
-        <div class="nav-ico">👥</div>
-        <div class="nav-txt"><span class="nav-lbl">Team</span><span class="nav-sub">The builders</span></div>
-      </a>
-      <div class="nav-prog-row">
-        <div class="npd active"></div><div class="npd"></div><div class="npd"></div>
-        <div class="npd"></div><div class="npd"></div><div class="npd"></div><div class="npd"></div>
+  <!-- LOADER -->
+  <div id="loader">
+    <div id="loader-content">
+      <span id="l-logo">GESTURE.IO</span>
+      <div id="l-tagline">Computer Control by Human Gesture &nbsp;·&nbsp; Deep Learning · KU</div>
+      <div id="l-attention">
+        <span class="hl">Attention</span> — your screen will be<br />
+        treated by gesture <span class="hl">very soon</span>.<br />
+        No mouse. No keyboard. Just <span class="hl">you</span>.
       </div>
-    </div>
-    <div id="nav-tab">
-      <div class="nav-tab-dot"></div><div class="nav-tab-dot"></div><div class="nav-tab-dot"></div>
+      <div id="l-prog-wrap">
+        <div id="l-progress">
+          <div id="l-progress-fill"></div>
+        </div>
+        <div id="l-progress-label">Initialising gesture engine</div>
+      </div>
+      <button id="l-enter">
+        Enter Experience
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </button>
     </div>
   </div>
 
-  <!-- HERO -->
-  <section id="hero">
-    <p class="hero-eyebrow gsap-reveal">Computer Control by Human Gesture &nbsp;·&nbsp; Deep Learning Project</p>
-    <h1 class="hero-title gsap-reveal">GESTURE<br/>.IO</h1>
-    <p class="hero-sub gsap-reveal">
-      Developed by <span>Team NeuralTouch.IO</span><br/>
-      Unitedworld Institute of Technology, KU
-    </p>
-    <div class="scroll-hint"><div class="scroll-line"></div>SCROLL</div>
-  </section>
+  <!-- SITE -->
+  <div id="site">
 
-  <!-- PROBLEM -->
-  <section id="problem">
-    <p class="problem-label gsap-reveal">The Problem</p>
-    <h2 class="problem-statement gsap-reveal">
-      Current HCI relies on physical peripherals, creating friction for
-      <em>presenters</em>, <em>surgeons</em>, <em>musicians</em>, and people with
-      <em>motor disabilities</em>.
-    </h2>
-    <p class="problem-response gsap-reveal">
-      <strong>This problem was treated heartly by our team.</strong><br/>
-      We built a system that listens to your body — not your keyboard.
-    </p>
-  </section>
-
-  <!-- TECH ARCHITECTURE -->
-  <section id="tech">
-    <p class="section-label gsap-reveal">Architecture &amp; Solution</p>
-    <div class="tech-grid">
-      <div class="tech-card gsap-reveal">
-        <span class="tech-icon">🧠</span>
-        <div class="tech-title">Backend Intelligence</div>
-        <div class="tech-desc">Real-time hand landmark extraction at 30 FPS. Each frame produces a compact 126-value keypoint vector — no raw image processing.</div>
-        <div class="tech-tags">
-          <span class="tech-tag">Python</span><span class="tech-tag">MediaPipe</span>
-          <span class="tech-tag">OpenCV</span><span class="tech-tag">NumPy</span>
+    <!-- LEFT NAV -->
+    <div id="side-nav">
+      <div id="nav-panel">
+        <div class="nav-hdr">Navigation</div>
+        <a class="nav-item active" href="#hero">
+          <div class="nav-ico">🏠</div>
+          <div class="nav-txt"><span class="nav-lbl">Home</span><span class="nav-sub">Overview</span></div>
+        </a>
+        <a class="nav-item" href="#problem">
+          <div class="nav-ico">❗</div>
+          <div class="nav-txt"><span class="nav-lbl">Problem</span><span class="nav-sub">Why we built it</span></div>
+        </a>
+        <a class="nav-item" href="#tech">
+          <div class="nav-ico">🧠</div>
+          <div class="nav-txt"><span class="nav-lbl">Architecture</span><span class="nav-sub">ML pipeline</span></div>
+        </a>
+        <a class="nav-item" href="#stack">
+          <div class="nav-ico">⚙️</div>
+          <div class="nav-txt"><span class="nav-lbl">Tech Stack</span><span class="nav-sub">All tools used</span></div>
+        </a>
+        <a class="nav-item" href="#install">
+          <div class="nav-ico">📦</div>
+          <div class="nav-txt"><span class="nav-lbl">Install</span><span class="nav-sub">Setup guide</span></div>
+        </a>
+        <a class="nav-item" href="#download">
+          <div class="nav-ico">⬇️</div>
+          <div class="nav-txt"><span class="nav-lbl">Download</span><span class="nav-sub">Get it now</span></div>
+        </a>
+        <a class="nav-item" href="#team">
+          <div class="nav-ico">👥</div>
+          <div class="nav-txt"><span class="nav-lbl">Team</span><span class="nav-sub">The builders</span></div>
+        </a>
+        <div class="nav-prog-row">
+          <div class="npd active"></div>
+          <div class="npd"></div>
+          <div class="npd"></div>
+          <div class="npd"></div>
+          <div class="npd"></div>
+          <div class="npd"></div>
+          <div class="npd"></div>
         </div>
       </div>
-      <div class="tech-card gsap-reveal">
-        <span class="tech-icon">⚡</span>
-        <div class="tech-title">Dual-Model Logic</div>
-        <div class="tech-desc">Static poses use a Dense/Conv1D network (instant). Motion gestures use a 3-layer LSTM reading 30 consecutive frames via a sliding window.</div>
-        <div class="tech-tags">
-          <span class="tech-tag">TensorFlow</span><span class="tech-tag">Keras</span>
-          <span class="tech-tag">LSTM</span><span class="tech-tag">Conv1D</span>
-        </div>
-      </div>
-      <div class="tech-card gsap-reveal">
-        <span class="tech-icon">🖥️</span>
-        <div class="tech-title">OS Execution Layer</div>
-        <div class="tech-desc">Gestures map to real OS commands — tab switching, volume control, keyboard shortcuts — executed natively via PyAutoGUI and Pycaw.</div>
-        <div class="tech-tags">
-          <span class="tech-tag">PyAutoGUI</span><span class="tech-tag">Pycaw</span>
-          <span class="tech-tag">pygetwindow</span><span class="tech-tag">customtkinter</span>
-        </div>
+      <div id="nav-tab">
+        <div class="nav-tab-dot"></div>
+        <div class="nav-tab-dot"></div>
+        <div class="nav-tab-dot"></div>
       </div>
     </div>
-    <div class="flying-lines">
-      <div class="fly-item">MediaPipe · 21 landmarks · 126-dim vector · TensorFlow/Keras · Dense · Conv1D · LSTM · PyAutoGUI · Pycaw · ONNX · Hugging Face</div>
-      <div class="fly-item">Static Gesture: fist · open_palm · peace &nbsp;·&nbsp; Motion Gesture: swipe_left · swipe_right · circle &nbsp;·&nbsp; Chrome · VS Code · Spotify</div>
-      <div class="fly-item">Confidence 0.9 (static) · 0.8 (motion) · 30-frame sliding window · EarlyStopping patience=50 · Adam optimizer</div>
-    </div>
-  </section>
 
-  <!-- ════════════════════════════════════
-       FULL TECH STACK SECTION  ← NEW
-  ════════════════════════════════════ -->
-  <section id="stack" style="min-height:auto;">
-    <p class="section-label gsap-reveal">Full Tech Stack</p>
-    <p class="stack-subtitle gsap-reveal">Every library, framework and tool that powers Gesture.IO — from raw pixels to OS commands.</p>
+    <!-- HERO -->
+    <section id="hero">
+      <p class="hero-eyebrow gsap-reveal">Computer Control by Human Gesture &nbsp;·&nbsp; Deep Learning Project</p>
+      <h1 class="hero-title gsap-reveal">GESTURE<br />.IO</h1>
+      <p class="hero-sub gsap-reveal">
+        Developed by <span>Team NeuralTouch.IO</span><br />
+        Unitedworld Institute of Technology, KU
+      </p>
+      <div class="scroll-hint">
+        <div class="scroll-line"></div>SCROLL
+      </div>
+    </section>
 
-    <!-- Category filter tabs -->
-    <div class="stack-tabs gsap-reveal">
-      <div class="stack-tab active" onclick="filterStack('all',this)">All</div>
-      <div class="stack-tab" onclick="filterStack('cv',this)">Computer Vision</div>
-      <div class="stack-tab" onclick="filterStack('ml',this)">Machine Learning</div>
-      <div class="stack-tab" onclick="filterStack('os',this)">OS &amp; Desktop</div>
-      <div class="stack-tab" onclick="filterStack('runtime',this)">Runtime &amp; Build</div>
-      <div class="stack-tab" onclick="filterStack('deploy',this)">Deployment</div>
-    </div>
+    <!-- PROBLEM -->
+    <section id="problem">
+      <p class="problem-label gsap-reveal">The Problem</p>
+      <h2 class="problem-statement gsap-reveal">
+        Current HCI relies on physical peripherals, creating friction for
+        <em>presenters</em>, <em>surgeons</em>, <em>musicians</em>, and people with
+        <em>motor disabilities</em>.
+      </h2>
+      <p class="problem-response gsap-reveal">
+        <strong>This problem was treated heartly by our team.</strong><br />
+        We built a system that listens to your body — not your keyboard.
+      </p>
+    </section>
 
-    <div class="stack-grid" id="stack-grid">
-
-      <!-- COMPUTER VISION -->
-      <div class="stack-item" data-cat="cv">
-        <span class="stack-category-badge">CV</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">📸</div>
-          <div class="stack-name">OpenCV</div>
-          <span class="stack-version">4.x</span>
+    <!-- TECH ARCHITECTURE -->
+    <section id="tech">
+      <p class="section-label gsap-reveal">Architecture &amp; Solution</p>
+      <div class="tech-grid">
+        <div class="tech-card gsap-reveal">
+          <span class="tech-icon">🧠</span>
+          <div class="tech-title">Backend Intelligence</div>
+          <div class="tech-desc">Real-time hand landmark extraction at 30 FPS. Each frame produces a compact 126-value
+            keypoint vector — no raw image processing.</div>
+          <div class="tech-tags">
+            <span class="tech-tag">Python</span><span class="tech-tag">MediaPipe</span>
+            <span class="tech-tag">OpenCV</span><span class="tech-tag">NumPy</span>
+          </div>
         </div>
-        <div class="stack-use">Webcam capture, frame preprocessing, and visual overlay rendering at 30 FPS.</div>
-      </div>
-
-      <div class="stack-item" data-cat="cv">
-        <span class="stack-category-badge">CV</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">🖐</div>
-          <div class="stack-name">MediaPipe</div>
-          <span class="stack-version">0.10</span>
+        <div class="tech-card gsap-reveal">
+          <span class="tech-icon">⚡</span>
+          <div class="tech-title">Dual-Model Logic</div>
+          <div class="tech-desc">Static poses use a Dense/Conv1D network (instant). Motion gestures use a 3-layer LSTM
+            reading 30 consecutive frames via a sliding window.</div>
+          <div class="tech-tags">
+            <span class="tech-tag">TensorFlow</span><span class="tech-tag">Keras</span>
+            <span class="tech-tag">LSTM</span><span class="tech-tag">Conv1D</span>
+          </div>
         </div>
-        <div class="stack-use">Hand, face and pose landmark detection. Produces 21 keypoints → 126-dim feature vector per frame.</div>
-      </div>
+        <div class="tech-card gsap-reveal">
+          <span class="tech-icon">🖥️</span>
+          <div class="tech-title">OS Execution Layer</div>
+          <div class="tech-desc">Gestures map to real OS commands — tab switching, volume control, keyboard shortcuts —
+            executed natively via PyAutoGUI</div>
+          <div class="tech-tags">
 
-      <div class="stack-item" data-cat="cv">
-        <span class="stack-category-badge">CV</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">📐</div>
-          <div class="stack-name">NumPy</div>
-          <span class="stack-version">1.26</span>
-        </div>
-        <div class="stack-use">Keypoint normalisation, sliding-window buffer management, and vectorised preprocessing.</div>
-      </div>
-
-      <!-- MACHINE LEARNING -->
-      <div class="stack-item" data-cat="ml">
-        <span class="stack-category-badge">ML</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">🧠</div>
-          <div class="stack-name">TensorFlow</div>
-          <span class="stack-version">2.15</span>
-        </div>
-        <div class="stack-use">Core deep learning runtime. Trains and runs both the static and motion gesture models.</div>
-      </div>
-
-      <div class="stack-item" data-cat="ml">
-        <span class="stack-category-badge">ML</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">🔬</div>
-          <div class="stack-name">Keras</div>
-          <span class="stack-version">3.x</span>
-        </div>
-        <div class="stack-use">High-level model API. Dense, Conv1D and LSTM layers — all defined in clean functional style.</div>
-      </div>
-
-      <div class="stack-item" data-cat="ml">
-        <span class="stack-category-badge">ML</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">⚡</div>
-          <div class="stack-name">ONNX Runtime</div>
-          <span class="stack-version">1.17</span>
-        </div>
-        <div class="stack-use">Optimised inference for production. Keras .keras models are exported to .onnx for faster runtime.</div>
-      </div>
-
-      <div class="stack-item" data-cat="ml">
-        <span class="stack-category-badge">ML</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">🤗</div>
-          <div class="stack-name">Hugging Face</div>
-          <span class="stack-version">Hub</span>
-        </div>
-        <div class="stack-use">Model weights hosting. MediaPipe .task files and ONNX models distributed via HF Hub.</div>
-      </div>
-
-      <!-- OS & DESKTOP -->
-      <div class="stack-item" data-cat="os">
-        <span class="stack-category-badge">OS</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">🖱</div>
-          <div class="stack-name">PyAutoGUI</div>
-          <span class="stack-version">0.9</span>
-        </div>
-        <div class="stack-use">Keyboard shortcuts, mouse clicks and system hotkeys triggered by recognised gestures.</div>
-      </div>
-
-      <div class="stack-item" data-cat="os">
-        <span class="stack-category-badge">OS</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">🔊</div>
-          <div class="stack-name">Pycaw</div>
-          <span class="stack-version">20240222</span>
-        </div>
-        <div class="stack-use">Windows Core Audio API wrapper. Controls system and per-app volume directly from gestures.</div>
-      </div>
-
-      <div class="stack-item" data-cat="os">
-        <span class="stack-category-badge">OS</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">🪟</div>
-          <div class="stack-name">pygetwindow</div>
-          <span class="stack-version">0.0.9</span>
-        </div>
-        <div class="stack-use">Reads and switches the active application window. Enables profile-aware gesture routing.</div>
-      </div>
-
-      <div class="stack-item" data-cat="os">
-        <span class="stack-category-badge">OS</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">🖼</div>
-          <div class="stack-name">customtkinter</div>
-          <span class="stack-version">5.2</span>
-        </div>
-        <div class="stack-use">Modern Tk-based desktop GUI. Hosts the live webcam feed, gesture log and confidence display.</div>
-      </div>
-
-      <!-- RUNTIME & BUILD -->
-      <div class="stack-item" data-cat="runtime">
-        <span class="stack-category-badge">RUN</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">🐍</div>
-          <div class="stack-name">Python</div>
-          <span class="stack-version">3.10</span>
-        </div>
-        <div class="stack-use">Core language. 3.10 is the minimum for TensorFlow 2.15 and MediaPipe 0.10 compatibility.</div>
-      </div>
-
-      <div class="stack-item" data-cat="runtime">
-        <span class="stack-category-badge">RUN</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">📦</div>
-          <div class="stack-name">PyInstaller</div>
-          <span class="stack-version">6.x</span>
-        </div>
-        <div class="stack-use">Bundles the full app (models, task files, dependencies) into a single .exe for Windows.</div>
-      </div>
-
-      <div class="stack-item" data-cat="runtime">
-        <span class="stack-category-badge">RUN</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">🌐</div>
-          <div class="stack-name">threading</div>
-          <span class="stack-version">stdlib</span>
-        </div>
-        <div class="stack-use">Parallel execution of vision pipeline and GUI loop — keeps the UI responsive at all times.</div>
-      </div>
-
-      <!-- DEPLOYMENT -->
-      <div class="stack-item" data-cat="deploy">
-        <span class="stack-category-badge">DEPLOY</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">🪄</div>
-          <div class="stack-name">GestureControl.exe</div>
-          <span class="stack-version">v1.0</span>
-        </div>
-        <div class="stack-use">Self-contained Windows executable (~130 MB). Bundles all models, task files and dependencies.</div>
-      </div>
-
-      <div class="stack-item" data-cat="deploy">
-        <span class="stack-category-badge">DEPLOY</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">🐙</div>
-          <div class="stack-name">GitHub</div>
-          <span class="stack-version">Releases</span>
-        </div>
-        <div class="stack-use">Source code hosting and version-tagged release zips for end-user distribution.</div>
-      </div>
-
-      <div class="stack-item" data-cat="deploy">
-        <span class="stack-category-badge">DEPLOY</span>
-        <div class="stack-item-top">
-          <div class="stack-logo">🖥</div>
-          <div class="stack-name">Windows 10/11</div>
-          <span class="stack-version">x64</span>
-        </div>
-        <div class="stack-use">Target OS. Audio, window and system automation APIs used are Windows-specific.</div>
-      </div>
-
-    </div>
-
-    <!-- Layer legend -->
-    <div class="stack-legend gsap-reveal">
-      <div class="legend-item"><div class="legend-dot" style="background:#4A90E2"></div>Computer Vision</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#FF3366"></div>Machine Learning</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#FF6B35"></div>OS &amp; Desktop</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#7B2FFF"></div>Runtime &amp; Build</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#00C9A7"></div>Deployment</div>
-    </div>
-  </section>
-
-  <!-- INSTALL -->
-  <section id="install">
-    <p class="section-label gsap-reveal">Setup &amp; Installation</p>
-    <div class="steps-row">
-      <div class="step-card gsap-reveal">
-        <div class="step-num">01</div>
-        <div class="step-title">Clone the Repo</div>
-        <code class="step-code">git clone https://github.com/YOUR_USERNAME/gesture-io</code>
-        <p class="step-note">Windows 10/11 required for OS-level controls.</p>
-      </div>
-      <div class="step-card gsap-reveal">
-        <div class="step-num">02</div>
-        <div class="step-title">Python 3.10 + venv</div>
-        <code class="step-code">pip install -r requirements.txt</code>
-        <p class="step-note">TensorFlow, MediaPipe, OpenCV, pyautogui, pycaw, customtkinter.</p>
-      </div>
-      <div class="step-card gsap-reveal">
-        <div class="step-num">03</div>
-        <div class="step-title">Download Tasks</div>
-        <code class="step-code">python setup.py --download-tasks</code>
-        <p class="step-note">Downloads MediaPipe task files &amp; model weights from Hugging Face.</p>
-      </div>
-      <div class="step-card gsap-reveal">
-        <div class="step-num">04</div>
-        <div class="step-title">Run</div>
-        <code class="step-code">python main.py</code>
-        <p class="step-note">Desktop GUI launches. Both models run simultaneously in real time.</p>
-      </div>
-    </div>
-    <div class="window-badge gsap-reveal">30-frame sliding window · LSTM motion recognition · dual-model architecture</div>
-  </section>
-
-  <!-- DOWNLOAD -->
-  <section id="download">
-    <p class="dl-big gsap-reveal">Ready to go touchless?</p>
-    <!-- ⚠️ TODO: Replace the href below with your real GitHub release ZIP URL -->
-    <a class="dl-btn gsap-reveal" id="dl-btn" href="https://github.com/avinash24112007/waveos/releases/download/v1.0/GestureControl_v1.zip" download onclick="triggerConfetti(event)">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Download Gesture.IO v1.0
-    </a>
-    <div class="dl-meta gsap-reveal">
-      <div class="dl-meta-item">🪟 Windows 10/11</div>
-      <div class="dl-meta-item">🐍 Python 3.10+</div>
-      <div class="dl-meta-item">📷 Webcam required</div>
-      <div class="dl-meta-item">📦 ~156 MB</div>
-    </div>
-    <p class="dl-sub">
-      <a href="https://huggingface.co/YOUR_USERNAME/gesture-io-models" target="_blank">Models on Hugging Face</a> &nbsp;·&nbsp;
-      <a href="https://github.com/YOUR_USERNAME/gesture-io" target="_blank">Source on GitHub</a>
-    </p>
-  </section>
-
-  <!-- TEAM -->
-  <section id="team">
-    <p class="section-label gsap-reveal">The Team</p>
-    <p class="team-intro gsap-reveal">
-      A passionate group of engineers and researchers from Unitedworld Institute of Technology, KU —
-      building the bridge between human intention and machine response.
-    </p>
-    <div class="team-grid">
-
-      <div class="member-card gsap-reveal">
-        <div class="member-avatar">AV</div>
-        <div class="member-name">Avinash</div>
-        <div class="member-role">Lead Developer · ML Engineer</div>
-        <div class="member-bio">Architected the full gesture pipeline — from MediaPipe keypoint extraction to dual-model inference and OS command execution. Designed the LSTM sliding-window architecture.</div>
-        <div class="member-links">
-          <a class="m-link" href="https://github.com/YOUR_USERNAME" target="_blank">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10.01 10.01 0 0022 12c0-5.52-4.48-10-10-10z"/></svg>
-            GitHub
-          </a>
-          <a class="m-link" href="https://linkedin.com/in/YOUR_LINKEDIN" target="_blank">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
-            LinkedIn
-          </a>
-          <a class="m-link" href="mailto:your-email@example.com">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
-            Email
-          </a>
-        </div>
-      </div>
-
-      <div class="member-card gsap-reveal">
-        <div class="member-avatar" style="background:linear-gradient(135deg,#7B2FFF,#FF3366)">YP</div>
-        <div class="member-name">Yug Patel</div>
-        <div class="member-role">Data Engineer · Model Trainer · Frontend Engineer</div>
-        <div class="member-bio">Responsible for dataset collection, augmentation strategy, and hyperparameter tuning across the Dense, Conv1D, and LSTM model architectures. Crafted training pipelines and evaluation benchmarks for gesture recognition.</div>
-        <div class="member-links">
-          <a class="m-link" href="https://github.com/yugp6488-commits" target="_blank">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10.01 10.01 0 0022 12c0-5.52-4.48-10-10-10z"/></svg>
-            GitHub
-          </a>
-          <a class="m-link" href="https://www.linkedin.com/in/yug-patel-547a69379?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
-            LinkedIn
-          </a>
-          <a class="m-link" href="mailto:yug.p6488@gmail.com">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
-            Email
-          </a>
-        </div>
-      </div>
-
-      <div class="member-card gsap-reveal">
-        <div class="member-avatar" style="background:linear-gradient(135deg,#00C9A7,#00648A)">AS</div>
-        <div class="member-name">Arya Shah</div>
-        <div class="member-role">ML Researcher · Computer Vision</div>
-        <div class="member-bio">Led the research phase — surveying gesture recognition literature, benchmarking CNN/LSTM approaches, and selecting MediaPipe over OpenPose for its real-time efficiency. Contributed to model evaluation methodology and dataset strategy.</div>
-        <div class="member-links">
-          <a class="m-link" href="https://github.com" target="_blank">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10.01 10.01 0 0022 12c0-5.52-4.48-10-10-10z"/></svg>
-            GitHub
-          </a>
-          <a class="m-link" href="https://linkedin.com" target="_blank">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
-            LinkedIn
-          </a>
-          <a class="m-link" href="https://paperswithcode.com" target="_blank">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            Research
-          </a>
-        </div>
-
-        <!-- Researcher highlight ribbon -->
-        <div style="margin-top:1.2rem;padding:.75rem 1rem;background:rgba(0,201,167,0.06);border:1px solid rgba(0,201,167,0.18);border-radius:10px;">
-          <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(0,201,167,0.7);margin-bottom:.4rem;">Research Focus</div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,0.45);line-height:1.6;">
-            Human-computer interaction · Gesture recognition · CNN/LSTM benchmarking · MediaPipe vs OpenPose analysis · Real-time inference optimization
+            <span class="tech-tag">pygetwindow</span><span class="tech-tag">customtkinter</span>
           </div>
         </div>
       </div>
+      <div class="flying-lines">
+        <div class="fly-item">MediaPipe · 21 landmarks · 126-dim vector · TensorFlow/Keras · Dense · Conv1D · LSTM ·
+          PyAutoGUI · ONNX · Hugging Face</div>
+        <div class="fly-item">Static Gesture: fist · open_palm · peace &nbsp;·&nbsp; Motion Gesture: swipe_left ·
+          swipe_right · circle &nbsp;·&nbsp; Chrome · VS Code · Spotify</div>
+        <div class="fly-item">Confidence 0.9 (static) · 0.8 (motion) · 30-frame sliding window · EarlyStopping
+          patience=50 · Adam optimizer</div>
+      </div>
+    </section>
 
-    </div>
-  </section>
+    <!-- ════════════════════════════════════
+       FULL TECH STACK SECTION  ← NEW
+  ════════════════════════════════════ -->
+    <section id="stack" style="min-height:auto;">
+      <p class="section-label gsap-reveal">Full Tech Stack</p>
+      <p class="stack-subtitle gsap-reveal">Every library, framework and tool that powers Gesture.IO — from raw pixels
+        to OS commands.</p>
 
-  <!-- FOOTER -->
-  <footer id="site-footer">
-    <div class="footer-top">
-      <div class="footer-brand">
-        <span class="footer-brand-logo">GESTURE.IO</span>
-        <p class="footer-brand-tagline">
-          A real-time gesture-based computer control system built on deep learning —
-          replacing physical peripherals with human intent.
-        </p>
-        <div class="footer-badges">
-          <span class="f-badge">Python 3.10</span>
-          <span class="f-badge">TensorFlow</span>
-          <span class="f-badge">MediaPipe</span>
-          <span class="f-badge">ONNX</span>
-          <span class="f-badge">Windows 11</span>
+      <!-- Category filter tabs -->
+      <div class="stack-tabs gsap-reveal">
+        <div class="stack-tab active" onclick="filterStack('all',this)">All</div>
+        <div class="stack-tab" onclick="filterStack('cv',this)">Computer Vision</div>
+        <div class="stack-tab" onclick="filterStack('ml',this)">Machine Learning</div>
+        <div class="stack-tab" onclick="filterStack('os',this)">OS &amp; Desktop</div>
+        <div class="stack-tab" onclick="filterStack('runtime',this)">Runtime &amp; Build</div>
+        <div class="stack-tab" onclick="filterStack('deploy',this)">Deployment</div>
+      </div>
+
+      <div class="stack-grid" id="stack-grid">
+
+        <!-- COMPUTER VISION -->
+        <div class="stack-item" data-cat="cv">
+          <span class="stack-category-badge">CV</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">📸</div>
+            <div class="stack-name">OpenCV</div>
+            <span class="stack-version">4.x</span>
+          </div>
+          <div class="stack-use">Webcam capture, frame preprocessing, and visual overlay rendering at 30 FPS.</div>
+        </div>
+
+        <div class="stack-item" data-cat="cv">
+          <span class="stack-category-badge">CV</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">🖐</div>
+            <div class="stack-name">MediaPipe</div>
+            <span class="stack-version">0.10</span>
+          </div>
+          <div class="stack-use">Hand, face and pose landmark detection. Produces 21 keypoints → 126-dim feature vector
+            per frame.</div>
+        </div>
+
+        <div class="stack-item" data-cat="cv">
+          <span class="stack-category-badge">CV</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">📐</div>
+            <div class="stack-name">NumPy</div>
+            <span class="stack-version">1.26</span>
+          </div>
+          <div class="stack-use">Keypoint normalisation, sliding-window buffer management, and vectorised preprocessing.
+          </div>
+        </div>
+
+        <!-- MACHINE LEARNING -->
+        <div class="stack-item" data-cat="ml">
+          <span class="stack-category-badge">ML</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">🧠</div>
+            <div class="stack-name">TensorFlow</div>
+            <span class="stack-version">2.15</span>
+          </div>
+          <div class="stack-use">Core deep learning runtime. Trains and runs both the static and motion gesture models.
+          </div>
+        </div>
+
+        <div class="stack-item" data-cat="ml">
+          <span class="stack-category-badge">ML</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">🔬</div>
+            <div class="stack-name">Keras</div>
+            <span class="stack-version">3.x</span>
+          </div>
+          <div class="stack-use">High-level model API. Dense, Conv1D and LSTM layers — all defined in clean functional
+            style.</div>
+        </div>
+
+        <div class="stack-item" data-cat="ml">
+          <span class="stack-category-badge">ML</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">⚡</div>
+            <div class="stack-name">ONNX Runtime</div>
+            <span class="stack-version">1.17</span>
+          </div>
+          <div class="stack-use">Optimised inference for production. Keras .keras models are exported to .onnx for
+            faster runtime.</div>
+        </div>
+
+        <div class="stack-item" data-cat="ml">
+          <span class="stack-category-badge">ML</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">🤗</div>
+            <div class="stack-name">Hugging Face</div>
+            <span class="stack-version">Hub</span>
+          </div>
+          <div class="stack-use">Model weights hosting. MediaPipe .task files and ONNX models distributed via HF Hub.
+          </div>
+        </div>
+
+        <!-- OS & DESKTOP -->
+        <div class="stack-item" data-cat="os">
+          <span class="stack-category-badge">OS</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">🖱</div>
+            <div class="stack-name">PyAutoGUI</div>
+            <span class="stack-version">0.9</span>
+          </div>
+          <div class="stack-use">Keyboard shortcuts, mouse clicks and system hotkeys triggered by recognised gestures.
+          </div>
+        </div>
+
+        <div class="stack-item" data-cat="os">
+          <span class="stack-category-badge">OS</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">🪟</div>
+            <div class="stack-name">pygetwindow</div>
+            <span class="stack-version">0.0.9</span>
+          </div>
+          <div class="stack-use">Reads and switches the active application window. Enables profile-aware gesture
+            routing.</div>
+        </div>
+
+        <div class="stack-item" data-cat="os">
+          <span class="stack-category-badge">OS</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">🖼</div>
+            <div class="stack-name">customtkinter</div>
+            <span class="stack-version">5.2</span>
+          </div>
+          <div class="stack-use">Modern Tk-based desktop GUI. Hosts the live webcam feed, gesture log and confidence
+            display.</div>
+        </div>
+
+        <!-- RUNTIME & BUILD -->
+        <div class="stack-item" data-cat="runtime">
+          <span class="stack-category-badge">RUN</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">🐍</div>
+            <div class="stack-name">Python</div>
+            <span class="stack-version">3.10</span>
+          </div>
+          <div class="stack-use">Core language. 3.10 is the minimum for TensorFlow 2.15 and MediaPipe 0.10
+            compatibility.</div>
+        </div>
+
+        <div class="stack-item" data-cat="runtime">
+          <span class="stack-category-badge">RUN</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">📦</div>
+            <div class="stack-name">PyInstaller</div>
+            <span class="stack-version">6.x</span>
+          </div>
+          <div class="stack-use">Bundles the full app (models, task files, dependencies) into a single .exe for Windows.
+          </div>
+        </div>
+
+        <div class="stack-item" data-cat="runtime">
+          <span class="stack-category-badge">RUN</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">🌐</div>
+            <div class="stack-name">threading</div>
+            <span class="stack-version">stdlib</span>
+          </div>
+          <div class="stack-use">Parallel execution of vision pipeline and GUI loop — keeps the UI responsive at all
+            times.</div>
+        </div>
+
+        <!-- DEPLOYMENT -->
+        <div class="stack-item" data-cat="deploy">
+          <span class="stack-category-badge">DEPLOY</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">🪄</div>
+            <div class="stack-name">GestureControl.exe</div>
+            <span class="stack-version">v1.0</span>
+          </div>
+          <div class="stack-use">Self-contained Windows executable (~130 MB). Bundles all models, task files and
+            dependencies.</div>
+        </div>
+
+        <div class="stack-item" data-cat="deploy">
+          <span class="stack-category-badge">DEPLOY</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">🐙</div>
+            <div class="stack-name">GitHub</div>
+            <span class="stack-version">Releases</span>
+          </div>
+          <div class="stack-use">Source code hosting and version-tagged release zips for end-user distribution.</div>
+        </div>
+
+        <div class="stack-item" data-cat="deploy">
+          <span class="stack-category-badge">DEPLOY</span>
+          <div class="stack-item-top">
+            <div class="stack-logo">🖥</div>
+            <div class="stack-name">Windows 10/11</div>
+            <span class="stack-version">x64</span>
+          </div>
+          <div class="stack-use">Target OS. Audio, window and system automation APIs used are Windows-specific.</div>
+        </div>
+
+      </div>
+
+      <!-- Layer legend -->
+      <div class="stack-legend gsap-reveal">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#4A90E2"></div>Computer Vision
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#FF3366"></div>Machine Learning
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#FF6B35"></div>OS &amp; Desktop
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#7B2FFF"></div>Runtime &amp; Build
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#00C9A7"></div>Deployment
         </div>
       </div>
+    </section>
 
-      <div>
-        <div class="footer-col-title">Project</div>
-        <ul class="footer-links">
-          <li><a href="#hero"><span class="dot"></span>Overview</a></li>
-          <li><a href="#problem"><span class="dot"></span>Problem Statement</a></li>
-          <li><a href="#tech"><span class="dot"></span>Architecture</a></li>
-          <li><a href="#stack"><span class="dot"></span>Tech Stack</a></li>
-          <li><a href="#install"><span class="dot"></span>Installation</a></li>
-          <li><a href="#download"><span class="dot"></span>Download</a></li>
-          <li><a href="#team"><span class="dot"></span>Team</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="footer-col-title">Resources</div>
-        <ul class="footer-links">
-          <li><a href="https://github.com/YOUR_USERNAME/gesture-io" target="_blank"><span class="dot"></span>GitHub Repository</a></li>
-          <li><a href="https://huggingface.co/YOUR_USERNAME/gesture-io-models" target="_blank"><span class="dot"></span>Hugging Face Models</a></li>
-          <li><a href="https://mediapipe.dev" target="_blank"><span class="dot"></span>MediaPipe Docs</a></li>
-          <li><a href="https://www.tensorflow.org" target="_blank"><span class="dot"></span>TensorFlow Docs</a></li>
-          <li><a href="https://pyautogui.readthedocs.io" target="_blank"><span class="dot"></span>PyAutoGUI Docs</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="footer-col-title">Contact</div>
-        <div class="footer-contact-item">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
-          <span><a href="mailto:team.gesture.io@gmail.com">team.gesture.io@gmail.com</a></span>
+    <!-- INSTALL -->
+    <section id="install">
+      <p class="section-label gsap-reveal">Setup &amp; Installation</p>
+      <p class="stack-subtitle gsap-reveal"
+        style="color:#fff; font-size:16px; margin-top:-2.5rem; margin-bottom:1.5rem; letter-spacing:0.05em; font-weight:600;">
+        2 steps to go touchless</p>
+      <div class="steps-row">
+        <div class="step-card gsap-reveal">
+          <div class="step-num">01</div>
+          <div class="step-title">Download the app</div>
+          <code class="step-code" style="word-break: break-all;">https://yugp6488-commits.github.io/Gesture.IO/</code>
+          <p class="step-note">Requires Windows 10/11 for OS-level controls.</p>
         </div>
-        <div class="footer-contact-item">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10.01 10.01 0 0022 12c0-5.52-4.48-10-10-10z"/></svg>
-          <span><a href="https://github.com/YOUR_USERNAME/gesture-io" target="_blank">github.com/gesture-io</a></span>
-        </div>
-        <div class="footer-contact-item">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <span>Unitedworld Institute of Technology,<br/>Karnavati University, Ahmedabad</span>
+        <div class="step-card gsap-reveal">
+          <div class="step-num">02</div>
+          <div class="step-title">Run the .exe file</div>
+          <code class="step-code">RUN GestureControl.exe</code>
+          <p class="step-note" style="line-height: 1.8;">Directly run the application seamlessly runs on your
+            machine.<br /><strong>NO Setup Headaches</strong></p>
         </div>
       </div>
+      <div class="window-badge gsap-reveal">Bundle Size: ~145 MB · 30-frame sliding window · LSTM motion recognition ·
+        Dual-model architecture</div>
+    </section>
 
-    </div>
-    <div class="footer-bottom">
-      <span class="footer-copy">© 2026 Gesture.IO &nbsp;·&nbsp; Team Avinash &nbsp;·&nbsp; Built at KU, Ahmedabad</span>
-      <div class="footer-social">
-        <a class="f-social" href="https://github.com/YOUR_USERNAME/gesture-io" target="_blank" title="GitHub">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10.01 10.01 0 0022 12c0-5.52-4.48-10-10-10z"/></svg>
-        </a>
-        <a class="f-social" href="https://linkedin.com/in/YOUR_LINKEDIN" target="_blank" title="LinkedIn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
-        </a>
-        <a class="f-social" href="mailto:team.gesture.io@gmail.com" title="Email">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
-        </a>
-        <a class="f-social" href="https://huggingface.co/YOUR_USERNAME/gesture-io-models" target="_blank" title="Hugging Face">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-        </a>
+    <!-- DOWNLOAD -->
+    <section id="download">
+      <p class="dl-big gsap-reveal">Ready to go touchless?</p>
+      <!-- ⚠️ TODO: Replace the href below with your real GitHub release ZIP URL -->
+      <a class="dl-btn gsap-reveal" id="dl-btn"
+        href="https://github.com/avinash24112007/waveos/releases/download/v1.0/GestureControl_v1.zip" download
+        onclick="triggerConfetti(event)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        Download Gesture.IO v1.0
+      </a>
+      <div class="dl-meta gsap-reveal">
+        <div class="dl-meta-item">🪟 Windows 10/11</div>
+        <div class="dl-meta-item">🐍 Python 3.10+</div>
+        <div class="dl-meta-item">📷 Webcam required</div>
+        <div class="dl-meta-item">📦 ~156 MB</div>
       </div>
-    </div>
-  </footer>
+      <p class="dl-sub">
+        <a href="https://huggingface.co/YOUR_USERNAME/gesture-io-models" target="_blank">Models on Hugging Face</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/YOUR_USERNAME/gesture-io" target="_blank">Source on GitHub</a>
+      </p>
+    </section>
 
-</div>
+    <!-- TEAM -->
+    <section id="team">
+      <p class="section-label gsap-reveal">The Team</p>
+      <p class="team-intro gsap-reveal">
+        A passionate group of engineers and researchers from Unitedworld Institute of Technology, KU —
+        building the bridge between human intention and machine response.
+      </p>
+      <div class="team-grid">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script>
-gsap.registerPlugin(ScrollTrigger);
+        <div class="member-card gsap-reveal">
+          <div class="member-avatar">AV</div>
+          <div class="member-name">Avinash</div>
+          <div class="member-role">Lead Developer · ML Engineer</div>
+          <div class="member-bio">Architected the full gesture pipeline — from MediaPipe keypoint extraction to
+            dual-model inference and OS command execution. Designed the LSTM sliding-window architecture.</div>
+          <div class="member-links">
+            <a class="m-link" href="https://github.com/avinash24112007/" target="_blank">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10.01 10.01 0 0022 12c0-5.52-4.48-10-10-10z" />
+              </svg>
+              GitHub
+            </a>
+            <a class="m-link" href="https://www.linkedin.com/in/avinash-a-a743822a2" target="_blank">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z" />
+                <circle cx="4" cy="4" r="2" />
+              </svg>
+              LinkedIn
+            </a>
+            <a class="m-link" href="mailto:avinash24112007@gmail.com">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="m2 7 10 7 10-7" />
+              </svg>
+              Email
+            </a>
+          </div>
+        </div>
 
-let MX = window.innerWidth / 2, MY = window.innerHeight / 2;
-document.addEventListener('mousemove', e => { MX = e.clientX; MY = e.clientY; });
+        <div class="member-card gsap-reveal">
+          <div class="member-avatar" style="background:linear-gradient(135deg,#7B2FFF,#FF3366)">YP</div>
+          <div class="member-name">Yug Patel</div>
+          <div class="member-role">Data Engineer · Model Trainer · Frontend Engineer</div>
+          <div class="member-bio">Responsible for dataset collection, augmentation strategy, and hyperparameter tuning
+            across the Dense, Conv1D, and LSTM model architectures. Crafted training pipelines and evaluation benchmarks
+            for gesture recognition.</div>
+          <div class="member-links">
+            <a class="m-link" href="https://github.com/yugp6488-commits/" target="_blank">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10.01 10.01 0 0022 12c0-5.52-4.48-10-10-10z" />
+              </svg>
+              GitHub
+            </a>
+            <a class="m-link" href="https://www.linkedin.com/in/yug-patel-547a69379/" target="_blank">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z" />
+                <circle cx="4" cy="4" r="2" />
+              </svg>
+              LinkedIn
+            </a>
+            <a class="m-link" href="mailto:yug.p3488@gmail.com">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="m2 7 10 7 10-7" />
+              </svg>
+              Email
+            </a>
+          </div>
+        </div>
 
-const dot   = document.getElementById('cursor-dot');
-const ring  = document.getElementById('cursor-ring');
-const tCvs  = document.getElementById('cursor-trail');
-const tCtx  = tCvs.getContext('2d');
-let CDX = MX, CDY = MY, CRX = MX, CRY = MY;
-let trailPts = [];
+        <div class="member-card gsap-reveal">
+          <div class="member-avatar" style="background:linear-gradient(135deg,#00C9A7,#00648A)">AS</div>
+          <div class="member-name">Arya Shah</div>
+          <div class="member-role">ML Researcher · Computer Vision</div>
+          <div class="member-bio">Led the research phase — surveying gesture recognition literature, benchmarking
+            CNN/LSTM approaches, and selecting MediaPipe over OpenPose for its real-time efficiency. Contributed to
+            model evaluation methodology and dataset strategy.</div>
+          <div class="member-links">
+            <a class="m-link" href="https://github.com/AryaShah639" target="_blank">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10.01 10.01 0 0022 12c0-5.52-4.48-10-10-10z" />
+              </svg>
+              GitHub
+            </a>
+            <a class="m-link"
+              href="https://www.linkedin.com/in/arya-shah-570a86378?utm_source=share_via&amp;utm_content=profile&amp;utm_medium=member_android"
+              target="_blank">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z" />
+                <circle cx="4" cy="4" r="2" />
+              </svg>
+              LinkedIn
+            </a>
+            <a class="m-link" href="mailto:aryashah0023@gmail.com">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="m2 7 10 7 10-7" />
+              </svg>
+              Email
+            </a>
+          </div>
 
-function resizeTrail(){ tCvs.width = window.innerWidth; tCvs.height = window.innerHeight; }
-resizeTrail();
-window.addEventListener('resize', resizeTrail);
+          <!-- Researcher highlight ribbon -->
+          <div
+            style="margin-top:1.2rem;padding:.75rem 1rem;background:rgba(0,201,167,0.06);border:1px solid rgba(0,201,167,0.18);border-radius:10px;">
+            <div
+              style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(0,201,167,0.7);margin-bottom:.4rem;">
+              Research Focus</div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,0.45);line-height:1.6;">
+              Human-computer interaction · Gesture recognition · CNN/LSTM benchmarking · MediaPipe vs OpenPose analysis
+              · Real-time inference optimization
+            </div>
+          </div>
+        </div>
 
-let trailColor = '255,51,102';
-(function animCursor(){
-  CDX += (MX - CDX) * 0.18; CDY += (MY - CDY) * 0.18;
-  CRX += (MX - CRX) * 0.07; CRY += (MY - CRY) * 0.07;
-  dot.style.left  = CDX + 'px'; dot.style.top  = CDY + 'px';
-  ring.style.left = CRX + 'px'; ring.style.top = CRY + 'px';
-  trailPts.push({ x: CDX, y: CDY, age: 0 });
-  if(trailPts.length > 50) trailPts.shift();
-  tCtx.clearRect(0, 0, tCvs.width, tCvs.height);
-  trailPts.forEach(p => {
-    p.age++;
-    const life = 1 - p.age / 50;
-    tCtx.beginPath();
-    tCtx.arc(p.x, p.y, 3.5 * life, 0, Math.PI * 2);
-    tCtx.fillStyle = `rgba(${trailColor},${life * 0.16})`;
-    tCtx.fill();
-  });
-  requestAnimationFrame(animCursor);
-})();
+      </div>
+    </section>
 
-function bindCursorHovers(){
-  document.querySelectorAll('h1,h2,h3,.hero-title,.problem-statement,.section-label,.hero-eyebrow,.hero-sub,.problem-response,.dl-big,.stack-subtitle').forEach(el => {
-    el.addEventListener('mouseenter', () => { document.body.classList.add('hover-text'); trailColor='255,255,255'; });
-    el.addEventListener('mouseleave', () => { document.body.classList.remove('hover-text'); trailColor='255,51,102'; });
-  });
-  document.querySelectorAll('button,.dl-btn,#l-enter,a,.stack-tab,.m-link').forEach(el => {
-    el.style.cursor = 'none';
-    el.addEventListener('mouseenter', () => { document.body.classList.add('hover-btn'); trailColor='255,51,102'; });
-    el.addEventListener('mouseleave', () => { document.body.classList.remove('hover-btn'); trailColor='255,51,102'; });
-  });
-  document.querySelectorAll('.tech-card,.step-card,.member-card,.stack-item').forEach(el => {
-    el.addEventListener('mouseenter', () => { document.body.classList.add('hover-card'); trailColor='255,107,53'; });
-    el.addEventListener('mouseleave', () => { document.body.classList.remove('hover-card'); trailColor='255,51,102'; });
-  });
-}
-bindCursorHovers();
+    <!-- FOOTER -->
+    <footer id="site-footer">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <span class="footer-brand-logo">GESTURE.IO</span>
+          <p class="footer-brand-tagline">
+            A real-time gesture-based computer control system built on deep learning —
+            replacing physical peripherals with human intent.
+          </p>
+          <div class="footer-badges">
+            <span class="f-badge">Python 3.10</span>
+            <span class="f-badge">TensorFlow</span>
+            <span class="f-badge">MediaPipe</span>
+            <span class="f-badge">ONNX</span>
+            <span class="f-badge">Windows 11</span>
+          </div>
+        </div>
 
-/* BACKGROUND WAVE */
-const wCvs = document.getElementById('bg-wave');
-const wCtx = wCvs.getContext('2d');
-function resizeWave(){ wCvs.width = window.innerWidth; wCvs.height = window.innerHeight; }
-resizeWave();
-window.addEventListener('resize', resizeWave);
+        <div>
+          <div class="footer-col-title">Project</div>
+          <ul class="footer-links">
+            <li><a href="#hero"><span class="dot"></span>Overview</a></li>
+            <li><a href="#problem"><span class="dot"></span>Problem Statement</a></li>
+            <li><a href="#tech"><span class="dot"></span>Architecture</a></li>
+            <li><a href="#stack"><span class="dot"></span>Tech Stack</a></li>
+            <li><a href="#install"><span class="dot"></span>Installation</a></li>
+            <li><a href="#download"><span class="dot"></span>Download</a></li>
+            <li><a href="#team"><span class="dot"></span>Team</a></li>
+          </ul>
+        </div>
 
-let waveAccentR = 255, waveAccentG = 255, waveAccentB = 255;
-let waveIntensity = 1.0;
-document.addEventListener('mousemove', () => {
-  const dx = (MX - window.innerWidth/2) / window.innerWidth;
-  const dy = (MY - window.innerHeight/2) / window.innerHeight;
-  waveIntensity = 1 + Math.sqrt(dx*dx + dy*dy) * 0.8;
-});
-document.querySelectorAll('.tech-card,.step-card,.member-card,.stack-item').forEach(el => {
-  el.addEventListener('mouseenter', () => { waveAccentR=255;waveAccentG=107;waveAccentB=53; });
-  el.addEventListener('mouseleave', () => { waveAccentR=255;waveAccentG=255;waveAccentB=255; });
-});
-document.querySelectorAll('button,.dl-btn,#l-enter,.stack-tab').forEach(el => {
-  el.addEventListener('mouseenter', () => { waveAccentR=255;waveAccentG=51;waveAccentB=102; });
-  el.addEventListener('mouseleave', () => { waveAccentR=255;waveAccentG=255;waveAccentB=255; });
-});
-document.querySelectorAll('h1,h2,.hero-title,.problem-statement').forEach(el => {
-  el.addEventListener('mouseenter', () => { waveAccentR=180;waveAccentG=160;waveAccentB=255; });
-  el.addEventListener('mouseleave', () => { waveAccentR=255;waveAccentG=255;waveAccentB=255; });
-});
+        <div>
+          <div class="footer-col-title">Resources</div>
+          <ul class="footer-links">
+            <li><a href="https://github.com/YOUR_USERNAME/gesture-io" target="_blank"><span class="dot"></span>GitHub
+                Repository</a></li>
+            <li><a href="https://huggingface.co/YOUR_USERNAME/gesture-io-models" target="_blank"><span
+                  class="dot"></span>Hugging Face Models</a></li>
+            <li><a href="https://mediapipe.dev" target="_blank"><span class="dot"></span>MediaPipe Docs</a></li>
+            <li><a href="https://www.tensorflow.org" target="_blank"><span class="dot"></span>TensorFlow Docs</a></li>
+            <li><a href="https://pyautogui.readthedocs.io" target="_blank"><span class="dot"></span>PyAutoGUI Docs</a>
+            </li>
+          </ul>
+        </div>
 
-let wT = 0;
-let cR = 255, cG = 255, cB = 255;
-(function animWave(){
-  cR += (waveAccentR - cR) * 0.04;
-  cG += (waveAccentG - cG) * 0.04;
-  cB += (waveAccentB - cB) * 0.04;
-  const w = wCvs.width, h = wCvs.height;
-  wCtx.clearRect(0, 0, w, h);
-  const dx = (MX - w/2) / w, dy = (MY - h/2) / h;
-  const dist = Math.sqrt(dx*dx + dy*dy);
-  for(let i = 0; i < 26; i++){
-    const freq  = 0.005 + i * 0.0014;
-    const amp   = (26 + i * 3.2 + dist * 65) * waveIntensity * 0.7;
-    const speed = 0.36 + i * 0.10;
-    const yBase = (h / 27) * (i + 1);
-    const blend = i / 26;
-    const r = Math.round(255 * (1-blend) + cR * blend);
-    const g = Math.round(255 * (1-blend) + cG * blend);
-    const b = Math.round(255 * (1-blend) + cB * blend);
-    const alpha = (0.018 + i * 0.007 + dist * 0.035) * waveIntensity;
-    wCtx.beginPath();
-    for(let x = 0; x <= w; x += 3){
-      const ci = Math.exp(-Math.pow((x - MX) / 160, 2)) * (MY - yBase) * 0.12;
-      const y = yBase
-        + Math.sin(x * freq + wT * speed + i * 0.5) * amp
-        + Math.sin(x * freq * 0.48 + wT * speed * 0.7) * (amp * 0.36)
-        + ci;
-      x === 0 ? wCtx.moveTo(x, y) : wCtx.lineTo(x, y);
-    }
-    wCtx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
-    wCtx.lineWidth = 0.6;
-    wCtx.stroke();
-  }
-  wT += 0.016;
-  requestAnimationFrame(animWave);
-})();
+        <div>
+          <div class="footer-col-title">Contact</div>
+          <div class="footer-contact-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="m2 7 10 7 10-7" />
+            </svg>
+            <span><a href="mailto:team.gesture.io@gmail.com">team.gesture.io@gmail.com</a></span>
+          </div>
+          <div class="footer-contact-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10.01 10.01 0 0022 12c0-5.52-4.48-10-10-10z" />
+            </svg>
+            <span><a href="https://github.com/YOUR_USERNAME/gesture-io" target="_blank">github.com/gesture-io</a></span>
+          </div>
+          <div class="footer-contact-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span>Unitedworld Institute of Technology,<br />Karnavati University, Ahmedabad</span>
+          </div>
+        </div>
 
-/* FLOATING PATHS */
-const bpSVG = document.getElementById('bg-paths');
-const NS = 'http://www.w3.org/2000/svg';
-const pathEls = [];
-for(let i = 0; i < 32; i++){
-  const pos = i < 16 ? 1 : -1;
-  const j   = i % 16;
-  const d   = `M${-380 - j*5*pos} ${-189 + j*6} C${-380 - j*5*pos} ${-189 + j*6} ${-312 - j*5*pos} ${216 - j*6} ${152 - j*5*pos} ${343 - j*6} C${616 - j*5*pos} ${470 - j*6} ${684 - j*5*pos} ${875 - j*6} ${684 - j*5*pos} ${875 - j*6}`;
-  const p   = document.createElementNS(NS, 'path');
-  p.setAttribute('d', d);
-  p.setAttribute('stroke', 'white');
-  p.setAttribute('stroke-width', String(0.35 + j * 0.04));
-  p.setAttribute('stroke-opacity', String(0.03 + j * 0.015));
-  p.setAttribute('fill', 'none');
-  p.setAttribute('stroke-dasharray', '1200');
-  p.setAttribute('stroke-dashoffset', '1200');
-  bpSVG.appendChild(p);
-  pathEls.push(p);
-  gsap.to(p, { strokeDashoffset: 0, duration: 18 + Math.random()*10, repeat:-1, ease:'none', delay: i*0.14 });
-  gsap.to(p, { strokeOpacity: (0.03 + j*0.015) * 3.2, duration: 3.5 + Math.random()*5, repeat:-1, yoyo:true, ease:'sine.inOut', delay: i*0.07 });
-}
-document.addEventListener('mousemove', () => {
-  const dx = (MX - window.innerWidth/2) / window.innerWidth;
-  const dy = (MY - window.innerHeight/2) / window.innerHeight;
-  pathEls.forEach((p, i) => {
-    const shift = (dx * 32 + dy * 14) * ((i % 7) - 3) * 0.38;
-    gsap.to(p, { x: shift, duration: 1.0, ease:'power2.out' });
-  });
-});
-function tintPaths(color){ pathEls.forEach(p => gsap.to(p, { attr:{ stroke: color }, duration:0.6 })); }
-document.querySelectorAll('button,.dl-btn,#l-enter,.stack-tab').forEach(el => {
-  el.addEventListener('mouseenter', () => tintPaths('#FF3366'));
-  el.addEventListener('mouseleave', () => tintPaths('white'));
-});
-document.querySelectorAll('.tech-card,.step-card,.member-card,.stack-item').forEach(el => {
-  el.addEventListener('mouseenter', () => tintPaths('#FF6B35'));
-  el.addEventListener('mouseleave', () => tintPaths('white'));
-});
-document.querySelectorAll('h1,h2,.hero-title,.problem-statement').forEach(el => {
-  el.addEventListener('mouseenter', () => tintPaths('#aaaaff'));
-  el.addEventListener('mouseleave', () => tintPaths('white'));
-});
+      </div>
+      <div class="footer-bottom">
+        <span class="footer-copy">© 2026 Gesture.IO &nbsp;·&nbsp; Team Avinash &nbsp;·&nbsp; Built at KU,
+          Ahmedabad</span>
+        <div class="footer-social">
+          <a class="f-social" href="https://github.com/YOUR_USERNAME/gesture-io" target="_blank" title="GitHub">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10.01 10.01 0 0022 12c0-5.52-4.48-10-10-10z" />
+            </svg>
+          </a>
+          <a class="f-social" href="https://linkedin.com/in/YOUR_LINKEDIN" target="_blank" title="LinkedIn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z" />
+              <circle cx="4" cy="4" r="2" />
+            </svg>
+          </a>
+          <a class="f-social" href="mailto:team.gesture.io@gmail.com" title="Email">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="m2 7 10 7 10-7" />
+            </svg>
+          </a>
+          <a class="f-social" href="https://huggingface.co/YOUR_USERNAME/gesture-io-models" target="_blank"
+            title="Hugging Face">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+              <line x1="9" y1="9" x2="9.01" y2="9" />
+              <line x1="15" y1="9" x2="15.01" y2="9" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </footer>
 
-/* LOADER */
-const loaderTL = gsap.timeline({ delay: 0.3 });
-loaderTL
-  .to('#l-logo',    { opacity:1, y:0, duration:1.3, ease:'power4.out' })
-  .to('#l-tagline', { opacity:1, y:0, duration:0.9, ease:'power3.out' }, '-=0.7')
-  .to('#l-prog-wrap', { opacity:1, duration:0.4 }, '-=0.2')
-  .to('#l-progress-fill', {
-    width:'100%', duration:2.6, ease:'power1.inOut',
-    onUpdate: function(){
-      const pct = Math.round(this.progress() * 100);
-      const labels = ['Initialising gesture engine','Loading neural models','Calibrating landmarks','Systems ready'];
-      document.getElementById('l-progress-label').textContent = labels[Math.min(3, Math.floor(pct/25))];
-    }
-  }, '+=0.05')
-  .to('#l-prog-wrap', { opacity:0, duration:0.35 }, '+=0.2')
-  .to('#l-attention', { opacity:1, color:'rgba(255,255,255,0.82)', duration:1.3, ease:'power2.out' }, '-=0.1')
-  .to('#l-enter',     { opacity:1, scale:1, duration:0.85, ease:'back.out(1.5)' }, '-=0.5');
+  </div>
 
-function enterSite(){
-  const tl = gsap.timeline();
-  tl.to('#loader-content', { opacity:0, y:-28, duration:0.55, ease:'power3.in' })
-    .to('#loader', { clipPath: 'inset(0 0 100% 0)', duration: 1.05, ease: 'power4.inOut' }, '-=0.05')
-    .call(() => {
-      document.getElementById('loader').style.display = 'none';
-      const site = document.getElementById('site');
-      site.classList.add('active');
-      gsap.fromTo(site, { opacity:0 }, { opacity:1, duration:0.7, ease:'power2.out' });
-      initScrollEffects();
-      initNav();
-    });
-}
-document.getElementById('l-enter').addEventListener('click', enterSite);
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
 
-function initScrollEffects(){
-  const pbg = document.getElementById('problem-bg');
-  ScrollTrigger.create({
-    trigger:'#problem', start:'top 80%', end:'bottom 20%', scrub:true,
-    onUpdate: s => {
-      const p = s.progress;
-      pbg.style.background = `rgba(${Math.round(p*100)},0,0,${p * 0.82})`;
-      waveAccentR = 255; waveAccentG = Math.round(255*(1-p)); waveAccentB = Math.round(255*(1-p));
-    }
-  });
-  ScrollTrigger.create({
-    trigger:'#tech', start:'top 60%', end:'top 0%', scrub:true,
-    onUpdate: s => {
-      const p = 1 - s.progress;
-      pbg.style.background = `rgba(100,0,0,${p * 0.45})`;
-      waveAccentR = 255; waveAccentG = Math.round(p*255); waveAccentB = Math.round(p*255);
-    }
-  });
-  gsap.utils.toArray('.gsap-reveal').forEach((el, i) => {
-    gsap.fromTo(el, { opacity:0, y:50 }, {
-      opacity:1, y:0, duration:1, ease:'power3.out',
-      scrollTrigger:{ trigger:el, start:'top 88%', toggleActions:'play none none none' },
-      delay:(i % 3) * 0.1
-    });
-  });
-}
+    let MX = window.innerWidth / 2, MY = window.innerHeight / 2;
+    document.addEventListener('mousemove', e => { MX = e.clientX; MY = e.clientY; });
 
-/* NAV active tracking */
-function initNav(){
-  const nav = document.getElementById('side-nav');
-  const tab = document.getElementById('nav-tab');
-  tab.addEventListener('click', () => nav.classList.toggle('open'));
+    const dot = document.getElementById('cursor-dot');
+    const ring = document.getElementById('cursor-ring');
+    const tCvs = document.getElementById('cursor-trail');
+    const tCtx = tCvs.getContext('2d');
+    let CDX = MX, CDY = MY, CRX = MX, CRY = MY;
+    let trailPts = [];
 
-  const sections = ['hero','problem','tech','stack','install','download','team'];
-  const navItems = document.querySelectorAll('.nav-item');
-  const dots     = document.querySelectorAll('.npd');
+    function resizeTrail() { tCvs.width = window.innerWidth; tCvs.height = window.innerHeight; }
+    resizeTrail();
+    window.addEventListener('resize', resizeTrail);
 
-  ScrollTrigger.create({
-    trigger:'#site',
-    start:'top top',
-    end:'bottom bottom',
-    onUpdate: () => {
-      let current = 0;
-      sections.forEach((id, i) => {
-        const el = document.getElementById(id);
-        if(el && el.getBoundingClientRect().top < window.innerHeight * 0.5) current = i;
+    let trailColor = '255,51,102';
+    (function animCursor() {
+      CDX += (MX - CDX) * 0.18; CDY += (MY - CDY) * 0.18;
+      CRX += (MX - CRX) * 0.07; CRY += (MY - CRY) * 0.07;
+      dot.style.left = CDX + 'px'; dot.style.top = CDY + 'px';
+      ring.style.left = CRX + 'px'; ring.style.top = CRY + 'px';
+      trailPts.push({ x: CDX, y: CDY, age: 0 });
+      if (trailPts.length > 50) trailPts.shift();
+      tCtx.clearRect(0, 0, tCvs.width, tCvs.height);
+      trailPts.forEach(p => {
+        p.age++;
+        const life = 1 - p.age / 50;
+        tCtx.beginPath();
+        tCtx.arc(p.x, p.y, 3.5 * life, 0, Math.PI * 2);
+        tCtx.fillStyle = `rgba(${trailColor},${life * 0.16})`;
+        tCtx.fill();
       });
-      navItems.forEach((item, i) => item.classList.toggle('active', i === current));
-      dots.forEach((d, i) => d.classList.toggle('active', i === current));
+      requestAnimationFrame(animCursor);
+    })();
+
+    function bindCursorHovers() {
+      document.querySelectorAll('h1,h2,h3,.hero-title,.problem-statement,.section-label,.hero-eyebrow,.hero-sub,.problem-response,.dl-big,.stack-subtitle').forEach(el => {
+        el.addEventListener('mouseenter', () => { document.body.classList.add('hover-text'); trailColor = '255,255,255'; });
+        el.addEventListener('mouseleave', () => { document.body.classList.remove('hover-text'); trailColor = '255,51,102'; });
+      });
+      document.querySelectorAll('button,.dl-btn,#l-enter,a,.stack-tab,.m-link').forEach(el => {
+        el.style.cursor = 'none';
+        el.addEventListener('mouseenter', () => { document.body.classList.add('hover-btn'); trailColor = '255,51,102'; });
+        el.addEventListener('mouseleave', () => { document.body.classList.remove('hover-btn'); trailColor = '255,51,102'; });
+      });
+      document.querySelectorAll('.tech-card,.step-card,.member-card,.stack-item').forEach(el => {
+        el.addEventListener('mouseenter', () => { document.body.classList.add('hover-card'); trailColor = '255,107,53'; });
+        el.addEventListener('mouseleave', () => { document.body.classList.remove('hover-card'); trailColor = '255,51,102'; });
+      });
     }
-  });
-}
+    bindCursorHovers();
 
-/* TECH STACK FILTER */
-function filterStack(cat, btn){
-  document.querySelectorAll('.stack-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.stack-item').forEach(item => {
-    const show = cat === 'all' || item.dataset.cat === cat;
-    item.style.display = show ? '' : 'none';
-  });
-}
+    /* BACKGROUND WAVE */
+    const wCvs = document.getElementById('bg-wave');
+    const wCtx = wCvs.getContext('2d');
+    function resizeWave() { wCvs.width = window.innerWidth; wCvs.height = window.innerHeight; }
+    resizeWave();
+    window.addEventListener('resize', resizeWave);
 
-/* DOWNLOAD CONFETTI */
-function triggerConfetti(e){
-  const btn = e.currentTarget;
-  const r   = btn.getBoundingClientRect();
-  const x   = (r.left + r.width/2)  / window.innerWidth;
-  const y   = (r.top  + r.height/2) / window.innerHeight;
-  confetti({ particleCount:120, spread:100, origin:{x,y}, colors:['#FF3366','#FF6B35','#fff','#FFD700'] });
-  setTimeout(()=>confetti({ particleCount:80, spread:140, origin:{x,y}, startVelocity:45, colors:['#FF3366','#FF6B35','#fff','#FFAA00'] }), 200);
-  setTimeout(()=>confetti({ particleCount:60, angle:60,  spread:80, origin:{x:0,y}, colors:['#FF3366','#fff'] }), 350);
-  setTimeout(()=>confetti({ particleCount:60, angle:120, spread:80, origin:{x:1,y}, colors:['#FF6B35','#FFD700'] }), 350);
-  setTimeout(()=>confetti({ particleCount:100, spread:200, origin:{x, y:y-0.1}, colors:['#FF3366','#FF6B35','#fff','#FFD700','#00FFAA'] }), 500);
-}
-</script>
+    let waveAccentR = 255, waveAccentG = 255, waveAccentB = 255;
+    let waveIntensity = 1.0;
+    document.addEventListener('mousemove', () => {
+      const dx = (MX - window.innerWidth / 2) / window.innerWidth;
+      const dy = (MY - window.innerHeight / 2) / window.innerHeight;
+      waveIntensity = 1 + Math.sqrt(dx * dx + dy * dy) * 0.8;
+    });
+    document.querySelectorAll('.tech-card,.step-card,.member-card,.stack-item').forEach(el => {
+      el.addEventListener('mouseenter', () => { waveAccentR = 255; waveAccentG = 107; waveAccentB = 53; });
+      el.addEventListener('mouseleave', () => { waveAccentR = 255; waveAccentG = 255; waveAccentB = 255; });
+    });
+    document.querySelectorAll('button,.dl-btn,#l-enter,.stack-tab').forEach(el => {
+      el.addEventListener('mouseenter', () => { waveAccentR = 255; waveAccentG = 51; waveAccentB = 102; });
+      el.addEventListener('mouseleave', () => { waveAccentR = 255; waveAccentG = 255; waveAccentB = 255; });
+    });
+    document.querySelectorAll('h1,h2,.hero-title,.problem-statement').forEach(el => {
+      el.addEventListener('mouseenter', () => { waveAccentR = 180; waveAccentG = 160; waveAccentB = 255; });
+      el.addEventListener('mouseleave', () => { waveAccentR = 255; waveAccentG = 255; waveAccentB = 255; });
+    });
+
+    let wT = 0;
+    let cR = 255, cG = 255, cB = 255;
+    (function animWave() {
+      cR += (waveAccentR - cR) * 0.04;
+      cG += (waveAccentG - cG) * 0.04;
+      cB += (waveAccentB - cB) * 0.04;
+      const w = wCvs.width, h = wCvs.height;
+      wCtx.clearRect(0, 0, w, h);
+      const dx = (MX - w / 2) / w, dy = (MY - h / 2) / h;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      for (let i = 0; i < 26; i++) {
+        const freq = 0.005 + i * 0.0014;
+        const amp = (26 + i * 3.2 + dist * 65) * waveIntensity * 0.7;
+        const speed = 0.36 + i * 0.10;
+        const yBase = (h / 27) * (i + 1);
+        const blend = i / 26;
+        const r = Math.round(255 * (1 - blend) + cR * blend);
+        const g = Math.round(255 * (1 - blend) + cG * blend);
+        const b = Math.round(255 * (1 - blend) + cB * blend);
+        const alpha = (0.018 + i * 0.007 + dist * 0.035) * waveIntensity;
+        wCtx.beginPath();
+        for (let x = 0; x <= w; x += 3) {
+          const ci = Math.exp(-Math.pow((x - MX) / 160, 2)) * (MY - yBase) * 0.12;
+          const y = yBase
+            + Math.sin(x * freq + wT * speed + i * 0.5) * amp
+            + Math.sin(x * freq * 0.48 + wT * speed * 0.7) * (amp * 0.36)
+            + ci;
+          x === 0 ? wCtx.moveTo(x, y) : wCtx.lineTo(x, y);
+        }
+        wCtx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
+        wCtx.lineWidth = 0.6;
+        wCtx.stroke();
+      }
+      wT += 0.016;
+      requestAnimationFrame(animWave);
+    })();
+
+    /* FLOATING PATHS */
+    const bpSVG = document.getElementById('bg-paths');
+    const NS = 'http://www.w3.org/2000/svg';
+    const pathEls = [];
+    for (let i = 0; i < 32; i++) {
+      const pos = i < 16 ? 1 : -1;
+      const j = i % 16;
+      const d = `M${-380 - j * 5 * pos} ${-189 + j * 6} C${-380 - j * 5 * pos} ${-189 + j * 6} ${-312 - j * 5 * pos} ${216 - j * 6} ${152 - j * 5 * pos} ${343 - j * 6} C${616 - j * 5 * pos} ${470 - j * 6} ${684 - j * 5 * pos} ${875 - j * 6} ${684 - j * 5 * pos} ${875 - j * 6}`;
+      const p = document.createElementNS(NS, 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('stroke', 'white');
+      p.setAttribute('stroke-width', String(0.35 + j * 0.04));
+      p.setAttribute('stroke-opacity', String(0.03 + j * 0.015));
+      p.setAttribute('fill', 'none');
+      p.setAttribute('stroke-dasharray', '1200');
+      p.setAttribute('stroke-dashoffset', '1200');
+      bpSVG.appendChild(p);
+      pathEls.push(p);
+      gsap.to(p, { strokeDashoffset: 0, duration: 18 + Math.random() * 10, repeat: -1, ease: 'none', delay: i * 0.14 });
+      gsap.to(p, { strokeOpacity: (0.03 + j * 0.015) * 3.2, duration: 3.5 + Math.random() * 5, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: i * 0.07 });
+    }
+    document.addEventListener('mousemove', () => {
+      const dx = (MX - window.innerWidth / 2) / window.innerWidth;
+      const dy = (MY - window.innerHeight / 2) / window.innerHeight;
+      pathEls.forEach((p, i) => {
+        const shift = (dx * 32 + dy * 14) * ((i % 7) - 3) * 0.38;
+        gsap.to(p, { x: shift, duration: 1.0, ease: 'power2.out' });
+      });
+    });
+    function tintPaths(color) { pathEls.forEach(p => gsap.to(p, { attr: { stroke: color }, duration: 0.6 })); }
+    document.querySelectorAll('button,.dl-btn,#l-enter,.stack-tab').forEach(el => {
+      el.addEventListener('mouseenter', () => tintPaths('#FF3366'));
+      el.addEventListener('mouseleave', () => tintPaths('white'));
+    });
+    document.querySelectorAll('.tech-card,.step-card,.member-card,.stack-item').forEach(el => {
+      el.addEventListener('mouseenter', () => tintPaths('#FF6B35'));
+      el.addEventListener('mouseleave', () => tintPaths('white'));
+    });
+    document.querySelectorAll('h1,h2,.hero-title,.problem-statement').forEach(el => {
+      el.addEventListener('mouseenter', () => tintPaths('#aaaaff'));
+      el.addEventListener('mouseleave', () => tintPaths('white'));
+    });
+
+    /* LOADER */
+    const loaderTL = gsap.timeline({ delay: 0.3 });
+    loaderTL
+      .to('#l-logo', { opacity: 1, y: 0, duration: 1.3, ease: 'power4.out' })
+      .to('#l-tagline', { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out' }, '-=0.7')
+      .to('#l-prog-wrap', { opacity: 1, duration: 0.4 }, '-=0.2')
+      .to('#l-progress-fill', {
+        width: '100%', duration: 2.6, ease: 'power1.inOut',
+        onUpdate: function () {
+          const pct = Math.round(this.progress() * 100);
+          const labels = ['Initialising gesture engine', 'Loading neural models', 'Calibrating landmarks', 'Systems ready'];
+          document.getElementById('l-progress-label').textContent = labels[Math.min(3, Math.floor(pct / 25))];
+        }
+      }, '+=0.05')
+      .to('#l-prog-wrap', { opacity: 0, duration: 0.35 }, '+=0.2')
+      .to('#l-attention', { opacity: 1, color: 'rgba(255,255,255,0.82)', duration: 1.3, ease: 'power2.out' }, '-=0.1')
+      .to('#l-enter', { opacity: 1, scale: 1, duration: 0.85, ease: 'back.out(1.5)' }, '-=0.5');
+
+    function enterSite() {
+      const tl = gsap.timeline();
+      tl.to('#loader-content', { opacity: 0, y: -28, duration: 0.55, ease: 'power3.in' })
+        .to('#loader', { clipPath: 'inset(0 0 100% 0)', duration: 1.05, ease: 'power4.inOut' }, '-=0.05')
+        .call(() => {
+          document.getElementById('loader').style.display = 'none';
+          const site = document.getElementById('site');
+          site.classList.add('active');
+          gsap.fromTo(site, { opacity: 0 }, { opacity: 1, duration: 0.7, ease: 'power2.out' });
+          initScrollEffects();
+          initNav();
+        });
+    }
+    document.getElementById('l-enter').addEventListener('click', enterSite);
+
+    function initScrollEffects() {
+      const pbg = document.getElementById('problem-bg');
+      ScrollTrigger.create({
+        trigger: '#problem', start: 'top 80%', end: 'bottom 20%', scrub: true,
+        onUpdate: s => {
+          const p = s.progress;
+          pbg.style.background = `rgba(${Math.round(p * 100)},0,0,${p * 0.82})`;
+          waveAccentR = 255; waveAccentG = Math.round(255 * (1 - p)); waveAccentB = Math.round(255 * (1 - p));
+        }
+      });
+      ScrollTrigger.create({
+        trigger: '#tech', start: 'top 60%', end: 'top 0%', scrub: true,
+        onUpdate: s => {
+          const p = 1 - s.progress;
+          pbg.style.background = `rgba(100,0,0,${p * 0.45})`;
+          waveAccentR = 255; waveAccentG = Math.round(p * 255); waveAccentB = Math.round(p * 255);
+        }
+      });
+      gsap.utils.toArray('.gsap-reveal').forEach((el, i) => {
+        gsap.fromTo(el, { opacity: 0, y: 50 }, {
+          opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' },
+          delay: (i % 3) * 0.1
+        });
+      });
+    }
+
+    /* NAV active tracking */
+    function initNav() {
+      const nav = document.getElementById('side-nav');
+      const tab = document.getElementById('nav-tab');
+      tab.addEventListener('click', () => nav.classList.toggle('open'));
+
+      const sections = ['hero', 'problem', 'tech', 'stack', 'install', 'download', 'team'];
+      const navItems = document.querySelectorAll('.nav-item');
+      const dots = document.querySelectorAll('.npd');
+
+      ScrollTrigger.create({
+        trigger: '#site',
+        start: 'top top',
+        end: 'bottom bottom',
+        onUpdate: () => {
+          let current = 0;
+          sections.forEach((id, i) => {
+            const el = document.getElementById(id);
+            if (el && el.getBoundingClientRect().top < window.innerHeight * 0.5) current = i;
+          });
+          navItems.forEach((item, i) => item.classList.toggle('active', i === current));
+          dots.forEach((d, i) => d.classList.toggle('active', i === current));
+        }
+      });
+    }
+
+    /* TECH STACK FILTER */
+    function filterStack(cat, btn) {
+      document.querySelectorAll('.stack-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.stack-item').forEach(item => {
+        const show = cat === 'all' || item.dataset.cat === cat;
+        item.style.display = show ? '' : 'none';
+      });
+    }
+
+    /* DOWNLOAD CONFETTI */
+    function triggerConfetti(e) {
+      const btn = e.currentTarget;
+      const r = btn.getBoundingClientRect();
+      const x = (r.left + r.width / 2) / window.innerWidth;
+      const y = (r.top + r.height / 2) / window.innerHeight;
+      confetti({ particleCount: 120, spread: 100, origin: { x, y }, colors: ['#FF3366', '#FF6B35', '#fff', '#FFD700'] });
+      setTimeout(() => confetti({ particleCount: 80, spread: 140, origin: { x, y }, startVelocity: 45, colors: ['#FF3366', '#FF6B35', '#fff', '#FFAA00'] }), 200);
+      setTimeout(() => confetti({ particleCount: 60, angle: 60, spread: 80, origin: { x: 0, y }, colors: ['#FF3366', '#fff'] }), 350);
+      setTimeout(() => confetti({ particleCount: 60, angle: 120, spread: 80, origin: { x: 1, y }, colors: ['#FF6B35', '#FFD700'] }), 350);
+      setTimeout(() => confetti({ particleCount: 100, spread: 200, origin: { x, y: y - 0.1 }, colors: ['#FF3366', '#FF6B35', '#fff', '#FFD700', '#00FFAA'] }), 500);
+    }
+  </script>
 </body>
+
 </html>
